@@ -32,7 +32,7 @@ with open("./keys/private.pem", "wb") as private_key_file:
     private_key_file.write(private_key)
 
 with open("./keys/receiver.pem", "wb") as public_key_file:
-    public_key_file.write(private_key)
+    public_key_file.write(public_key)
 
 # Getting the data to be encrypted
 with open("./files/Protecting_sentitive_information.pdf", "rb") as file:
