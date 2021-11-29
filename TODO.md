@@ -3,11 +3,8 @@
 
 ### In progress  
  
-- [ ] Add the cryptographic primitives  
-
 ## In review
 
-- [ ] Add the cryptographic services 
-
-
-### Done  
+### Done 
+- [x] Add the cryptographic services  
+- [x] Add the cryptographic primitives  
