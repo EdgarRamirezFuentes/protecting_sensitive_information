@@ -62,8 +62,6 @@ with open("./files/encrypted_data.bin", "wb") as encrypted_file:
 # Decrypting data
 ##############################################
 
-file_in = None 
-
 # Getting the private key
 with open("./keys/private.pem") as private_key_file:   
     private_key = RSA.import_key(private_key_file.read())
