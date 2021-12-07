@@ -44,20 +44,23 @@ def verify_signature(decrypted_document : bytes, sender_public_key : bytes, sign
         ---------
             True if the signatures match, otherwise False
     '''
-
-    # Getting the sender public key
-    key = RSA.import_key(sender_public_key)
-
-    # Hashing the decrypted document
-    h = SHA256.new(decrypted_document)
-
-    verifier = pss.new(key)
     try:
-        # Compare the hashed decrypted document signature with the original signature
-        verifier.verify(h, signature)
-        return True
-    except (ValueError, TypeError):
-        # If the signatures are not the same, it returns False
+        # Getting the sender public key
+        key = RSA.import_key(sender_public_key)
+
+        # Hashing the decrypted document
+        h = SHA256.new(decrypted_document)
+
+        verifier = pss.new(key)
+        try:
+            # Compare the hashed decrypted document signature with the original signature
+            verifier.verify(h, signature)
+            return True
+        except (ValueError, TypeError):
+            # If the signatures are not the same, it returns False
+            return False
+    except:
+        # Something went wrong
         return False
 
 
@@ -88,33 +91,33 @@ def decrypt_document(encrypted_document : bytes, receiver_private_key : bytes, s
         -------
         True if the file was decrypted successfully. Otherwise, it returns False
     '''
-    # Getting the receiver private key
-    private_key = RSA.import_key(receiver_private_key)
+    try:
+        # Getting the receiver private key
+        private_key = RSA.import_key(receiver_private_key)
 
-    # Getting the sender public key
-    public_key = RSA.import_key(sender_public_key)
+        # Getting the necessary information to decrypt the document
+        enc_session_key, nonce, tag, ciphertext = \
+        [ encrypted_document.read(x) for x in (private_key.size_in_bytes(), 16, 16, -1) ]
 
-    # Getting the necessary information to decrypt the document
-    enc_session_key, nonce, tag, ciphertext = \
-    [ encrypted_document.read(x) for x in (private_key.size_in_bytes(), 16, 16, -1) ]
+        # Decrypting the session key using the receiver private key
+        cipher_rsa = PKCS1_OAEP.new(private_key)
+        session_key = cipher_rsa.decrypt(enc_session_key)
 
-    # Decrypting the session key using the receiver private key
-    cipher_rsa = PKCS1_OAEP.new(private_key)
-    session_key = cipher_rsa.decrypt(enc_session_key)
+        # Decrypting the document using the AES session key
+        cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
+        decrypted_document = cipher_aes.decrypt_and_verify(ciphertext, tag)
 
-    # Decrypting the document using the AES session key
-    cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
-    decrypted_document = cipher_aes.decrypt_and_verify(ciphertext, tag)
+        # Verifying the signature
+        is_valid_signature = verify_signature(decrypted_document, sender_public_key, original_signature)
 
-    # Verifying the signature
-    is_valid_signature = verify_signature(decrypted_document, sender_public_key, original_signature)
-
-    if is_valid_signature:
-        # Writing the decrypted document in a new PDF file
-        with open(f"{TMP_FOLDER}{filename}.pdf", "wb") as decrypted_document_file:
-            decrypted_document_file.write(decrypted_document)
-        return True
-    else:
+        if is_valid_signature:
+            # Writing the decrypted document in a new PDF file
+            with open(f"{TMP_FOLDER}{filename}.pdf", "wb") as decrypted_document_file:
+                decrypted_document_file.write(decrypted_document)
+            return True
+        else:
+            return False
+    except:
         return False
 
 

@@ -3,7 +3,7 @@ from flask_session import Session
 from werkzeug.utils import secure_filename
 from helpers import delete_tmp_file, allowed_file, decrypt_document, delete_tmp_file, TMP_FOLDER
 from threading import Thread
-import os
+import os, re
 
  
 app = Flask(__name__)
@@ -42,60 +42,73 @@ def decrypt_file():
             flash(f'No selected file', 'danger')
             return redirect(request.url)
 
-        is_allowed_file = allowed_file(file.filename)
+        # is_allowed_file = allowed_file(file.filename)
         
-        if file and is_allowed_file:
-            filename = secure_filename(file.filename)
-            filename_without_extension = filename.split('.')[0]
+        if file:
+            try:
+                filename = secure_filename(file.filename)
 
-            # Getting the sender public key
-            with open(f"./assets/public_keys/{sender_id}.pem") as sender_public_key_file:
-                sender_public_key = sender_public_key_file.read()
-            
-            # Getting the logged in user id
-            # receiver_id = session.get('id')
+                # Check if the filename fulfills the standard
+                # Filename standard: senderID_receiverID_encryptedFilename_encryptionID.bin
+                filename_regex = r"^[0-9]+_[0-9]+_\w+_[0-9].bin$"
 
-            # Getting the user private key
-            # Using a temporary  private key while the login module is finished
-            with open("./assets/private_keys/2.pem", "rb") as receiver_private_key_file:
-                receiver_private_key = receiver_private_key_file.read()
+                if not re.match(filename_regex, filename):
+                    flash('The filename was modified or it is not a bin file', 'danger')
+                    return redirect(request.url)
+                
+                filename_without_extension = filename.split('.')[0]
 
-            # Getting the signature
-            # Using a temporary signature while the database is connected
-            with open("./assets/signatures/1_2_Protecting_sensitive_information_1.bin", "rb") as signature_file:
-                signature = signature_file.read()
+                # Getting the sender public key
+                with open(f"./assets/public_keys/{sender_id}.pem") as sender_public_key_file:
+                    sender_public_key = sender_public_key_file.read()
+                
+                # Getting the logged in user id
+                # receiver_id = session.get('id')
 
-            # It is the path where the uploaded file will be stored
-            path = os.path.join(app.config['TMP_FOLDER'], filename)
+                # Getting the user private key
+                # Using a temporary  private key while the login module is finished
+                with open("./assets/private_keys/2.pem", "rb") as receiver_private_key_file:
+                    receiver_private_key = receiver_private_key_file.read()
 
-            # Store the file in the provided path
-            file.save(path)
+                # Getting the signature
+                # Using a temporary signature while the database is connected
+                with open("./assets/signatures/1_2_Protecting_sensitive_information_1.bin", "rb") as signature_file:
+                    signature = signature_file.read()
 
-            # Getting the reference to the file to decrypt
-            encrypted_document = open(path, "rb")
-            # Check if the file was decrypted successfully
-            decrypted = decrypt_document(encrypted_document, receiver_private_key, sender_public_key, signature, filename_without_extension) 
-            encrypted_document.close()
+                # It is the path where the uploaded file will be stored
+                path = os.path.join(app.config['TMP_FOLDER'], filename)
 
-            if decrypted:
-                # Open a thread to delete the decrypted file
-                pdf_thread = Thread(target=delete_tmp_file, args=(f"{filename_without_extension}.pdf",))
-                pdf_thread.daemon = True
-                pdf_thread.start()
+                # Store the file in the provided path
+                file.save(path)
 
-                # Open a threah to delete the uploaded file
+                # Getting the reference to the file to decrypt
+                encrypted_document = open(path, "rb")
+                # Check if the file was decrypted successfully
+                decrypted = decrypt_document(encrypted_document, receiver_private_key, sender_public_key, signature, filename_without_extension) 
+                encrypted_document.close()
+
+                # Open a thread to delete the uploaded file
                 uploaded_file_thread = Thread(target=delete_tmp_file, args=(filename,))
                 uploaded_file_thread.daemon = True
                 uploaded_file_thread.start()
 
-                return redirect(url_for('download_file',
-                                    name=f"{filename_without_extension}.pdf"))
-            else:
-                # Return an error message
-                flash(f'The signature is not authentic', 'danger')
-                return redirect(request.url)  
+                if decrypted:
+                    # Open a thread to delete the decrypted file
+                    pdf_thread = Thread(target=delete_tmp_file, args=(f"{filename_without_extension}.pdf",))
+                    pdf_thread.daemon = True
+                    pdf_thread.start()
+
+                    return redirect(url_for('download_file',
+                                        name=f"{filename_without_extension}.pdf"))
+                else:
+                    # Return an error message
+                    flash(f'The signature is not authentic. Try later', 'danger')
+                    return redirect(request.url)  
+            except:
+                flash('Something went wrong', 'danger')
+                return redirect(request.url)
         else:
-            flash(f'No allowed file', 'danger')
+            flash(f'No file sent', 'danger')
             return redirect(request.url)
 
 @app.route('/uploads/<name>')
