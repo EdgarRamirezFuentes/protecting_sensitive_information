@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Decryption{% endblock %}
+{% block scripts %} 
+    <script src="../static/js/alerts.js"></script>
+{% endblock %}
+{% block main %}
+<h1 class="title animated bounceIn">Decryption</h1>
+{% with messages = get_flashed_messages(with_categories=True) %}
+   {% if messages %}
+      {% for category, message in messages %}
+        <script>show_message("{{ category.title() }}!", "{{message}}", "{{ category }}" == "danger" ? "error" : "{{ category }}");</script>
+      {% endfor %}
+   {% endif %}
+{% endwith %}
+<section>
+    <form method="post" enctype=multipart/form-data>
+        <input class="my-3" type="file" name="file" id="file">
+        <br>
+        <label for="sender_id">Sender: </label>
+        <select name="sender_id" id="sender_id">
+            <option value="1">Edgar</option>
+            <option value="2">Mary</option>
+            <option value="3">Ivette</option>
+        </select>
+        <br>
+        <button class="btn btn-primary mt-3" type="submit">Decrypt</button>
+    </form>
+</section>
+{% if filename %}
+    <a href="{{filename}}">Download</a>
+{% endif %}
+{% endblock %}
