@@ -7,4 +7,5 @@
 
 ### Done 
 - [x] Add the cryptographic services  
-- [x] Add the cryptographic primitives  
+- [x] Add the cryptographic primitives 
+- [x] Add the System architecture
