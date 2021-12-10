@@ -99,23 +99,23 @@
 
         <div class="row d-flex justify-content-center">
           <div class="col-md-6">
-            <form>
+            <form action = "/encrypt-file" method = "post" enctype=multipart/form-data>
               <!-- 2 column grid layout with text inputs for the first and last names -->
               <div class="row mb-4">
                 <div class="col">
                   <label class="form-label" for="receiverId">To who?</label>
                   <div class="form-outline">
                     <select name="receiverId" id="receiverId" >
-                      <option value="Edgar">Edgar </option>
-                      <option value="Ivette">Ivette </option>
-                      <option value="Mary">Mary </option>
+                      <option value="1">Edgar </option>
+                      <option value="2">Ivette </option>
+                      <option value="3">Mary </option>
                     </select>
                   </div>
                 </div>
                 <div class="col">
                   <label class="form-label" for="plainFile" >Select the document</label>
                   <div class="form-outline">
-                    <input type="file" id="plainFile" name="plainFile" class="form-control" />                    
+                    <input type="file" id="plainFile" name="file" class="form-control" />                    
                   </div>
                 </div>
               </div>
@@ -123,8 +123,8 @@
 
               <!-- Password input -->
               <div class="form-outline mb-4">
-                <input type="password" id="form3Example4" class="form-control" />
-                <label class="form-label" for="form3Example4" name="pswd">Password</label>
+                <input type="password" id="form3Example4" class="form-control"  name="pswd"/>
+                <label class="form-label" for="form3Example4" >Password</label>
               </div>
 
               <!-- Submit button -->

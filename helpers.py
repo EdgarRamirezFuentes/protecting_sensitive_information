@@ -3,9 +3,18 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES, PKCS1_OAEP
 import os, shutil, time
+from Crypto.Random import get_random_bytes
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 
 ALLOWED_EXTENSIONS = {'bin', 'pdf'}
 TMP_FOLDER = './assets/tmp/'
+SIGNATURES_FOLDER = "./assets/signatures/"
+PUBLIC_KEY_FOLDER = "./assets/public_keys/" 
+PRIVATE_KEY_FOLDER = "./assets/private_keys/"
 
 def allowed_file(filename : str):
     '''
@@ -148,3 +157,84 @@ def delete_tmp_file(filename):
 
 def validatePassword(password, idEmisor):
     pass 
+
+def sign_document(document : bytes, sender_private_key : bytes,idReceptor,idEmisor,nombreArchivo,idCifrado) -> None:
+    '''
+        Generate a sign for the provided document
+
+        Parameters
+        -----------
+        document : bytes
+            It is the document that will be signed
+
+        sender_private_key : bytes
+            It is the private key that will be used to sign the document
+    '''
+    # Getting the sender private key
+    key = RSA.import_key(sender_private_key)
+    # Hashing the document
+    h = SHA256.new(document)
+    # Signing the hashed document
+    signature = pss.new(key).sign(h)
+
+    # Storing the signature
+    with open(f"{SIGNATURES_FOLDER}{idEmisor}_{idReceptor}_{nombreArchivo}_{idCifrado}.bin", "wb") as sign_file:
+        sign_file.write(signature)
+
+def encrypt_document(document : bytes, receiver_public_key : bytes, idEmisor,idReceptor,numeroDocumento,nombreArchivo):
+    '''
+        Encrypt a document using a hybrid encryption scheme. 
+        It uses RSA with PKCS#1 OAEP for asymmetric encryption of an AES session key.
+
+        Parameters
+        ----------
+        document : bytes
+            It is the document that will be encrypted
+
+        receiver_public_key : bytes
+            It is the public key that will be used to encrypt the document
+    '''
+
+    # Getting the receiver public key
+    key = RSA.importKey(receiver_public_key)
+
+    # Generating the AES session key 
+    session_key = get_random_bytes(16)
+
+    # Encrypting the session key using the receiver public key
+    cipher_rsa = PKCS1_OAEP.new(key)
+    enc_session_key = cipher_rsa.encrypt(session_key)
+
+    # Encrypting the document using the AES session key
+    cipher_aes = AES.new(session_key, AES.MODE_EAX)
+    ciphertext, tag = cipher_aes.encrypt_and_digest(document)
+
+    # Storing the encrypted data
+    with open(f"{TMP_FOLDER}{idEmisor}_{idReceptor}_{nombreArchivo}_{numeroDocumento}.bin", "wb") as encrypted_file:
+        [ encrypted_file.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext) ]    
+
+def sendDocument(email,path,fileName):
+    try:
+        secret_key = ""
+        sender_email = "ivette_ro_m@hotmail.com"
+        receiver_email = email
+        message = MIMEMultipart()
+        message["From"] = sender_email
+        message['To'] = receiver_email
+        message['Subject'] = "Archivo cifrado - " +fileName
+        attachment = open(path,'rb')
+        obj = MIMEBase('application','octet-stream')
+        obj.set_payload((attachment).read())
+        encoders.encode_base64(obj)
+        obj.add_header('Content-Disposition',"attachment; filename= "+fileName)
+        message.attach(obj)
+        my_message = message.as_string()
+        email_session = smtplib.SMTP('smtp.gmail.com',587)
+        email_session.starttls()
+        email_session.login(sender_email, secret_key)
+        email_session.sendmail(sender_email,receiver_email,my_message)
+        email_session.quit()
+        print("YOUR MAIL HAS BEEN SENT SUCCESSFULLY")
+        return True
+    except: 
+        return False
