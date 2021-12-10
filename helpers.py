@@ -145,3 +145,6 @@ def delete_tmp_file(filename):
     time.sleep(30)
     if os.path.exists(f"{TMP_FOLDER}{filename}"):
         os.remove(f"{TMP_FOLDER}{filename}")
+
+def validatePassword(password, idEmisor):
+    pass 
