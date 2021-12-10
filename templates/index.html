@@ -103,29 +103,28 @@
               <!-- 2 column grid layout with text inputs for the first and last names -->
               <div class="row mb-4">
                 <div class="col">
+                  <label class="form-label" for="receiverId">To who?</label>
                   <div class="form-outline">
-                    <input type="text" id="form3Example1" class="form-control" />
-                    <label class="form-label" for="form3Example1">To who?</label>
+                    <select name="receiverId" id="receiverId" >
+                      <option value="Edgar">Edgar </option>
+                      <option value="Ivette">Ivette </option>
+                      <option value="Mary">Mary </option>
+                    </select>
                   </div>
                 </div>
                 <div class="col">
+                  <label class="form-label" for="plainFile" >Select the document</label>
                   <div class="form-outline">
-                    <input type="text" id="form3Example2" class="form-control" />
-                    <label class="form-label" for="form3Example2">Select the document</label>
+                    <input type="file" id="plainFile" name="plainFile" class="form-control" />                    
                   </div>
                 </div>
               </div>
 
-              <!-- Email input -->
-              <div class="form-outline mb-4">
-                <input type="email" id="form3Example3" class="form-control" />
-                <label class="form-label" for="form3Example3">Email address of the receiver</label>
-              </div>
 
               <!-- Password input -->
               <div class="form-outline mb-4">
                 <input type="password" id="form3Example4" class="form-control" />
-                <label class="form-label" for="form3Example4">Password</label>
+                <label class="form-label" for="form3Example4" name="pswd">Password</label>
               </div>
 
               <!-- Submit button -->
@@ -150,28 +149,29 @@
               <!-- 2 column grid layout with text inputs for the first and last names -->
               <div class="row mb-4">
                 <div class="col">
+                  <label class="form-label" for="senderId">From who?</label>
                   <div class="form-outline">
-                    <input type="text" id="form3Example1" class="form-control" />
-                    <label class="form-label" for="form3Example1">From who?</label>
+                    <div class="form-outline">
+                      <select name="senderId" id="senderId" >
+                        <option value="Edgar">Edgar </option>
+                        <option value="Ivette">Ivette </option>
+                        <option value="Mary">Mary </option>
+                      </select>
+                    </div>
+                    
                   </div>
                 </div>
                 <div class="col">
+                  <label class="form-label" for="cipherFile" >Select the enciphered document</label>
                   <div class="form-outline">
-                    <input type="text" id="form3Example2" class="form-control" />
-                    <label class="form-label" for="form3Example2">Select the enciphered document</label>
+                    <input type="file" id="cipherFile" name="cipherFile" class="form-control" />                    
                   </div>
                 </div>
-              </div>
-
-              <!-- Email input -->
-              <div class="form-outline mb-4">
-                <input type="email" id="form3Example3" class="form-control" />
-                <label class="form-label" for="form3Example3">Email address of the sender</label>
               </div>
 
               <!-- Password input -->
               <div class="form-outline mb-4">
-                <input type="password" id="form3Example4" class="form-control" />
+                <input type="password" id="form3Example4" class="form-control"  name="pswd"/>
                 <label class="form-label" for="form3Example4">Password</label>
               </div>
 
@@ -185,43 +185,14 @@
       </section>
       <!--Section: Content-->
 
-      <hr class="my-5" />
 
-      <!--Section: Content-->
-      <section>
-        <div class="row">
-          <div class="col-md-6 gx-5 mb-4">
-            <div class="bg-image hover-overlay ripple shadow-2-strong" data-mdb-ripple-color="light">
-              <img src="https://mdbootstrap.com/img/new/slides/031.jpg" class="img-fluid" />
-              <a href="#!">
-                <div class="mask" style="background-color: rgba(251, 251, 251, 0.15);"></div>
-              </a>
-            </div>
-          </div>
-
-          <div class="col-md-6 gx-5 mb-4">
-            <h4><strong>Facilis consequatur eligendi</strong></h4>
-            <p class="text-muted">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Facilis consequatur
-              eligendi quisquam doloremque vero ex debitis veritatis placeat unde animi laborum
-              sapiente illo possimus, commodi dignissimos obcaecati illum maiores corporis.
-            </p>
-            <p><strong>Doloremque vero ex debitis veritatis?</strong></p>
-            <p class="text-muted">
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quod itaque voluptate
-              nesciunt laborum incidunt. Officia, quam consectetur. Earum eligendi aliquam illum
-              alias, unde optio accusantium soluta, iusto molestiae adipisci et?
-            </p>
-          </div>
-        </div>
-      </section>
-      <!--Section: Content-->
+    
 
       <hr class="my-5" />
 
       <!--Section: Content-->
       <section class="text-center">
-        <h4 class="mb-5"><strong>Facilis consequatur eligendi</strong></h4>
+        <h4 class="mb-5"><strong>Desarrolladores</strong></h4>
 
         <div class="row">
           <div class="col-lg-4 col-md-12 mb-4">
@@ -233,12 +204,12 @@
                 </a>
               </div>
               <div class="card-body">
-                <h5 class="card-title">Card title</h5>
+                <h5 class="card-title">Ivette Rodríguez</h5>
                 <p class="card-text">
                   Some quick example text to build on the card title and make up the bulk of the
                   card's content.
                 </p>
-                <a href="#!" class="btn btn-primary">Button</a>
+                
               </div>
             </div>
           </div>
@@ -252,12 +223,12 @@
                 </a>
               </div>
               <div class="card-body">
-                <h5 class="card-title">Card title</h5>
+                <h5 class="card-title">Edgar Ramirez</h5>
                 <p class="card-text">
                   Some quick example text to build on the card title and make up the bulk of the
                   card's content.
                 </p>
-                <a href="#!" class="btn btn-primary">Button</a>
+                
               </div>
             </div>
           </div>
@@ -271,12 +242,12 @@
                 </a>
               </div>
               <div class="card-body">
-                <h5 class="card-title">Card title</h5>
+                <h5 class="card-title">Maria Salmeron </h5>
                 <p class="card-text">
                   Some quick example text to build on the card title and make up the bulk of the
                   card's content.
                 </p>
-                <a href="#!" class="btn btn-primary">Button</a>
+                
               </div>
             </div>
           </div>
