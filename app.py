@@ -9,12 +9,17 @@ import os, re
 app = Flask(__name__)
 app.config['TMP_FOLDER'] = TMP_FOLDER
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY") 
+app.config['SECRET_KEY'] = "12345"
+#os.environ.get("SECRET_KEY") 
 
 
 @app.route("/")
 def index():
-    return render_template("./index.html")
+    return render_template("./login.html")
+
+@app.route("/login")
+def login():
+    return render_template("./login.html")
 
 @app.route("/decrypt-file", methods=["GET", "POST"])
 def decrypt_file():
