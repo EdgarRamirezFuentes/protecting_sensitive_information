@@ -1,7 +1,7 @@
 from flask import Flask, flash, redirect, render_template, request, session, send_from_directory, url_for
 from flask_session import Session
 from werkzeug.utils import secure_filename
-from helpers import delete_tmp_file, allowed_file, decrypt_document, delete_tmp_file, TMP_FOLDER, validatePassword, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER, encrypt_document,sendDocument
+from helpers import delete_tmp_file, allowed_file, decrypt_document, delete_tmp_file, TMP_FOLDER, validatePassword, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER, encrypt_document,sendDocument,sign_document
 from threading import Thread
 import os, re
 
@@ -205,6 +205,9 @@ def encrypt_file():
 
                 encrypt_document(plainText,publicKey,idEmisor,receiverId,int(numeroCifrados)+1,filename_without_extension)
                 sendDocument(correo,f"{TMP_FOLDER}{idEmisor}_{receiverId}_{filename_without_extension}_{int(numeroCifrados)+1}.bin",filename_without_extension)
+#Sign section ---------------------------------------------------------------------------------------------------------------------------------------------------
+                sign_document(plainText, privateKey,receiverId,idEmisor,filename_without_extension,int(numeroCifrados)+1)
+#**Sign section -------------------------------------------------------------------------------------------------------------------------------------------------
                 flash('Encrypted file', 'success')
                 return redirect("/")
         except:
