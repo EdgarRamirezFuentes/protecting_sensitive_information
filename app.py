@@ -29,15 +29,6 @@ def decrypt_file():
             flash(f'No selected sender', 'danger')
             return redirect("/")
         
-        # Obteniendo 4
-        password = request.form.get("pswd")
-        print(password," password")
-        if not password:
-            #warning
-            flash(f'No password', 'danger')
-            return redirect("/")
-
-
         # Check if the post request has the file part
         if 'file' not in request.files:
             flash(f'No file part', 'danger')
@@ -167,15 +158,7 @@ def encrypt_file():
         return redirect("/")
 
     # is_allowed_file = allowed_file(file.filename)
-    # Obteniendo 4
-    password = request.form.get("pswd")
-    print(password," password")
-    if not password:
-        #warning
-        flash(f'No password', 'danger')
-        return redirect("/")
 
-    #falta validatePassword
     if file:
         try:
             #Limpieza
