@@ -13,8 +13,18 @@
     <link rel="stylesheet" href="../static/css/mdb.min.css" />
     <!-- Custom styles -->
     <!--<link rel="stylesheet" href="../static/css/style.css" />-->
+    <script src="../static/js/alerts.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   
 </head>
 <body>
+  {% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+     {% for category, message in messages %}
+       <script>show_message("{{ category.title() }}!", "{{message}}", "{{ category }}" == "danger" ? "error" : "{{ category }}");</script>
+     {% endfor %}
+  {% endif %}
+{% endwith %}
       <!--Main Navigation-->
   <header>
     <style>
@@ -145,7 +155,7 @@
 
         <div class="row d-flex justify-content-center">
           <div class="col-md-6">
-            <form>
+            <form action = "/decrypt-file" method = "post" enctype=multipart/form-data>
               <!-- 2 column grid layout with text inputs for the first and last names -->
               <div class="row mb-4">
                 <div class="col">
@@ -153,9 +163,9 @@
                   <div class="form-outline">
                     <div class="form-outline">
                       <select name="senderId" id="senderId" >
-                        <option value="Edgar">Edgar </option>
-                        <option value="Ivette">Ivette </option>
-                        <option value="Mary">Mary </option>
+                        <option value="1">Edgar </option>
+                        <option value="2">Ivette </option>
+                        <option value="3">Mary </option>
                       </select>
                     </div>
                     
@@ -164,7 +174,7 @@
                 <div class="col">
                   <label class="form-label" for="cipherFile" >Select the enciphered document</label>
                   <div class="form-outline">
-                    <input type="file" id="cipherFile" name="cipherFile" class="form-control" />                    
+                    <input type="file" id="cipherFile" name="file" class="form-control" />                    
                   </div>
                 </div>
               </div>

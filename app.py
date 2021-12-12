@@ -19,21 +19,30 @@ def index():
 @app.route("/decrypt-file", methods=["GET", "POST"])
 def decrypt_file():
     if request.method == "GET":
-        return render_template("./decrypt_file.html")
+        return render_template("./index.html")
     elif request.method == "POST":
         # Get the sender ID
-        sender_id = request.form.get('sender_id')
-
+        sender_id = request.form.get('senderId')
+        print(sender_id," sender_id")
         # Check if the sender_id was sent
         if not sender_id:
             #warning
             flash(f'No selected sender', 'danger')
-            return redirect(request.url)
+            return redirect("/")
+        
+        # Obteniendo 4
+        password = request.form.get("pswd")
+        print(password," password")
+        if not password:
+            #warning
+            flash(f'No password', 'danger')
+            return redirect("/")
+
 
         # Check if the post request has the file part
         if 'file' not in request.files:
             flash(f'No file part', 'danger')
-            return redirect(request.url)
+            return redirect("/")
         #obteniendo el archivo
         file = request.files['file']
 
@@ -41,7 +50,7 @@ def decrypt_file():
         # submit an empty part without filename
         if file.filename == '':
             flash(f'No selected file', 'danger')
-            return redirect(request.url)
+            return redirect("/")
 
         # is_allowed_file = allowed_file(file.filename)
         
@@ -49,6 +58,7 @@ def decrypt_file():
             try:
                 #Limpieza
                 filename = secure_filename(file.filename)
+                print(filename, " name file")
 
                 # Check if the filename fulfills the standard
                 # Filename standard: senderID_receiverID_encryptedFilename_encryptionID.bin
@@ -56,7 +66,7 @@ def decrypt_file():
 
                 if not re.match(filename_regex, filename):
                     flash('The filename was modified or it is not a bin file', 'danger')
-                    return redirect(request.url)
+                    return redirect("/")
 
                 filename_without_extension = filename.split('.')[0]
 
@@ -69,12 +79,12 @@ def decrypt_file():
 
                 # Getting the user private key
                 # Using a temporary  private key while the login module is finished
-                with open("./assets/private_keys/2.pem", "rb") as receiver_private_key_file:
+                with open("./assets/private_keys/3.pem", "rb") as receiver_private_key_file:
                     receiver_private_key = receiver_private_key_file.read()
 
                 # Getting the signature
                 # Using a temporary signature while the database is connected
-                with open("./assets/signatures/1_2_Protecting_sensitive_information_1.bin", "rb") as signature_file:
+                with open("./assets/signatures/2_3_Guion_presentacion_4.bin", "rb") as signature_file:
                     signature = signature_file.read()
 
                 # It is the path where the uploaded file will be stored
@@ -94,24 +104,30 @@ def decrypt_file():
                 uploaded_file_thread.daemon = True
                 uploaded_file_thread.start()
 
+                print("LLegamos al decrypted")
+                print(decrypted," decrypted")
+
                 if decrypted:
                     # Open a thread to delete the decrypted file
                     pdf_thread = Thread(target=delete_tmp_file, args=(f"{filename_without_extension}.pdf",))
                     pdf_thread.daemon = True
                     pdf_thread.start()
 
+                    print("Dentro del decrypted")
+
                     return redirect(url_for('download_file',
                                         name=f"{filename_without_extension}.pdf"))
+                    flash('Decrypted file', 'success')
                 else:
                     # Return an error message
                     flash(f'The signature is not authentic. Try later', 'danger')
-                    return redirect(request.url)  
+                    return redirect("/")  
             except:
                 flash('Something went wrong', 'danger')
-                return redirect(request.url)
+                return redirect("/")
         else:
             flash(f'No file sent', 'danger')
-            return redirect(request.url)
+            return redirect("/")
 
 
 
@@ -131,15 +147,15 @@ def encrypt_file():
     if not receiverId:
         #warning
         flash(f'No selected receiver', 'danger')
-        return redirect(request.url)
+        return redirect("/")
     #Obtener del inicio de sesion *PENDIENTE
-    senderId = "1"
+    senderId = "2"
 
     #Obteniendo 3
     # Check if the post request has the file part
     if 'file' not in request.files:
         flash(f'No file part', 'danger')
-        return redirect(request.url)
+        return redirect("/")
     #obteniendo el archivo
     file = request.files['file']
 
@@ -147,7 +163,7 @@ def encrypt_file():
     # submit an empty part without filename
     if file.filename == '':
         flash(f'No selected file', 'danger')
-        return redirect(request.url)
+        return redirect("/")
 
     # is_allowed_file = allowed_file(file.filename)
     # Obteniendo 4
@@ -156,7 +172,7 @@ def encrypt_file():
     if not password:
         #warning
         flash(f'No password', 'danger')
-        return redirect(request.url)
+        return redirect("/")
 
     #falta validatePassword
     if file:
@@ -170,7 +186,7 @@ def encrypt_file():
 
             if not re.match(filename_regex, filename):
                 flash('The file is not a pdf', 'danger')
-                return redirect(request.url)
+                return redirect("/")
 
             filename_without_extension = filename.split('.')[0]
             #Obtener llave privada del emisor
