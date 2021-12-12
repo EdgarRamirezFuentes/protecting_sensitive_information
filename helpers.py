@@ -61,6 +61,7 @@ def verify_signature(decrypted_document : bytes, sender_public_key : bytes, sign
         h = SHA256.new(decrypted_document)
 
         verifier = pss.new(key)
+        print("Llegue aquí")
         try:
             # Compare the hashed decrypted document signature with the original signature
             verifier.verify(h, signature)
@@ -127,6 +128,7 @@ def decrypt_document(encrypted_document : bytes, receiver_private_key : bytes, s
         else:
             return False
     except:
+        print("Entre al except")
         return False
 
 
@@ -215,10 +217,9 @@ def encrypt_document(document : bytes, receiver_public_key : bytes, idEmisor,idR
 
 def sendDocument(email,path,fileName):
     try:
-        secret_key = os.environ.get("SECRET_KEY")
+        secret_key = "contraseña real 100% no feik"
         sender_email = "edgar.alejandro.fuentes98@gmail.com"
         receiver_email = email
-        print("path", path)
         message = MIMEMultipart()
         message["From"] = sender_email
         message['To'] = receiver_email
