@@ -217,7 +217,7 @@ def encrypt_document(document : bytes, receiver_public_key : bytes, idEmisor,idR
 
 def sendDocument(email,path,fileName):
     try:
-        secret_key = "Salmeron_19"
+        secret_key = "Salmeron_21"
         sender_email = "marymorrera12@gmail.com"
         receiver_email = email
         message = MIMEMultipart()

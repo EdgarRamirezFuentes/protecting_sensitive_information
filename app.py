@@ -84,7 +84,7 @@ def decrypt_file():
 
                 # Getting the signature
                 # Using a temporary signature while the database is connected
-                with open("./assets/signatures/2_3_Guion_presentacion_4.bin", "rb") as signature_file:
+                with open(f"./assets/signatures/{filename_without_extension}.bin", "rb") as signature_file:
                     signature = signature_file.read()
 
                 # It is the path where the uploaded file will be stored
