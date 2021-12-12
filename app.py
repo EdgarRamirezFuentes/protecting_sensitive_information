@@ -1,222 +1,304 @@
+         ###########################################################
+        #         Protecting sensitive information                #
+       #             Cryptography final project                  #
+      #                   Semester 2022-1                       #
+     #                                                         #
+    #                                                         #
+   #            Ramírez Fuentes Edgar Alejandro              #
+  #             Salmerón Contreras María José               #
+ #             Rodríguez Melgoza Ivette                    #
+###########################################################
+
 from flask import Flask, flash, redirect, render_template, request, session, send_from_directory, url_for
 from flask_session import Session
 from werkzeug.utils import secure_filename
-from helpers import delete_tmp_file, allowed_file, decrypt_document, delete_tmp_file, TMP_FOLDER, validatePassword, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER, encrypt_document,sendDocument,sign_document
+from helpers import deleteFile, decryptDocument, encryptDocument,sendDocument, signDocument
+from helpers import TMP_FOLDER, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER
 from threading import Thread
 import os, re
 
 app = Flask(__name__)
-app.config['TMP_FOLDER'] = TMP_FOLDER
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config['SECRET_KEY'] = "123" 
 
-
+  #############################
+ #     Index page route      #
+#############################
 @app.route("/")
 def index():
     return render_template("./index.html")
 
-@app.route("/decrypt-file", methods=["GET", "POST"])
+
+  #############################
+ #     Login page route      #
+#############################
+@app.route("/login", methods=["GET","POST"])
+def login():
+    return render_template("login.html")
+
+  #############################
+ #     Decrypt file route    #
+#############################
+@app.route("/decrypt-file", methods=["POST",])
 def decrypt_file():
-    if request.method == "GET":
-        return render_template("./index.html")
-    elif request.method == "POST":
-        # Get the sender ID
-        sender_id = request.form.get('senderId')
-        print(sender_id," sender_id")
-        # Check if the sender_id was sent
-        if not sender_id:
-            #warning
-            flash(f'No selected sender', 'danger')
-            return redirect("/")
-        
-        # Check if the post request has the file part
-        if 'file' not in request.files:
-            flash(f'No file part', 'danger')
-            return redirect("/")
-        #obteniendo el archivo
-        file = request.files['file']
+    # Get the sender ID
+    senderId = request.form.get('senderId')
 
-        # If user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            flash(f'No selected file', 'danger')
-            return redirect("/")
-
-        # is_allowed_file = allowed_file(file.filename)
-        
-        if file:
-            try:
-                #Limpieza
-                filename = secure_filename(file.filename)
-                print(filename, " name file")
-
-                # Check if the filename fulfills the standard
-                # Filename standard: senderID_receiverID_encryptedFilename_encryptionID.bin
-                filename_regex = r"^[0-9]+_[0-9]+_\w+_[0-9].bin$"
-
-                if not re.match(filename_regex, filename):
-                    flash('The filename was modified or it is not a bin file', 'danger')
-                    return redirect("/")
-
-                filename_without_extension = filename.split('.')[0]
-
-                # Getting the sender public key
-                with open(f"./assets/public_keys/{sender_id}.pem") as sender_public_key_file:
-                    sender_public_key = sender_public_key_file.read()
-                
-                # Getting the logged in user id
-                # receiver_id = session.get('id')
-
-                # Getting the user private key
-                # Using a temporary  private key while the login module is finished
-                with open("./assets/private_keys/3.pem", "rb") as receiver_private_key_file:
-                    receiver_private_key = receiver_private_key_file.read()
-
-                # Getting the signature
-                # Using a temporary signature while the database is connected
-
-                print(f"{SIGNATURES_FOLDER}{filename}")
-                with open(f"{SIGNATURES_FOLDER}{filename}", "rb") as signature_file:
-                    signature = signature_file.read()
-
-                # It is the path where the uploaded file will be stored
-                path = os.path.join(app.config['TMP_FOLDER'], filename)
-
-                # Store the file in the provided path
-                file.save(path)
-
-                # Getting the reference to the file to decrypt
-                encrypted_document = open(path, "rb")
-                # Check if the file was decrypted successfully
-                decrypted = decrypt_document(encrypted_document, receiver_private_key, sender_public_key, signature, filename_without_extension) 
-                encrypted_document.close()
-
-                # Open a thread to delete the uploaded file
-                uploaded_file_thread = Thread(target=delete_tmp_file, args=(filename,))
-                uploaded_file_thread.daemon = True
-                uploaded_file_thread.start()
-
-                print("LLegamos al decrypted")
-                print(decrypted," decrypted")
-
-                if decrypted:
-                    # Open a thread to delete the decrypted file
-                    pdf_thread = Thread(target=delete_tmp_file, args=(f"{filename_without_extension}.pdf",))
-                    pdf_thread.daemon = True
-                    pdf_thread.start()
-
-                    print("Dentro del decrypted")
-
-                    return redirect(url_for('download_file',
-                                        name=f"{filename_without_extension}.pdf"))
-                    flash('Decrypted file', 'success')
-                else:
-                    # Return an error message
-                    flash(f'The signature is not authentic. Try later', 'danger')
-                    return redirect("/")  
-            except:
-                flash('Something went wrong', 'danger')
-                return redirect("/")
-        else:
-            flash(f'No file sent', 'danger')
-            return redirect("/")
-
-
-
-#Cipher section --------------------------------------------------------------------------------------------------------------------
-@app.route("/encrypt-file", methods=["POST",])
-def encrypt_file():
-    # Check if the sender_id was sent
-    # 1.- id(s) receptor
-    # 2.- id emisor
-    # 3.- Archivo
-    # 4.- Contraseña emisor
-    # Validar que todos los datos tienen entradas, si no, enviar msj de error
-
-    # Obteniendo 1
-    receiverId = request.form.get("receiverId")
-    print(receiverId, " receiverId")
-    if not receiverId:
-        #warning
-        flash(f'No selected receiver', 'danger')
-        return redirect("/")
-    #Obtener del inicio de sesion *PENDIENTE
-    senderId = "2"
-
-    #Obteniendo 3
+    # Check if the senderId was sent
+    if not senderId:
+        flash(f'No selected sender', 'danger')
+        return redirect(url_for('index'))
+    
     # Check if the post request has the file part
     if 'file' not in request.files:
         flash(f'No file part', 'danger')
-        return redirect("/")
-    #obteniendo el archivo
+        return redirect(url_for('index'))
+
+    # Getting the file from the form
     file = request.files['file']
 
     # If user does not select file, browser also
     # submit an empty part without filename
     if file.filename == '':
         flash(f'No selected file', 'danger')
-        return redirect("/")
-
-    # is_allowed_file = allowed_file(file.filename)
+        return redirect(url_for('index'))
 
     if file:
         try:
-            #Limpieza
             filename = secure_filename(file.filename)
-            print(filename, " filename")
+
             # Check if the filename fulfills the standard
             # Filename standard: senderID_receiverID_encryptedFilename_encryptionID.bin
-            filename_regex = r"^.+\.pdf$"
+            filenameRegex = r"^[0-9]+_[0-9]+_[\w\-]+_[0-9]\.bin$"
 
-            if not re.match(filename_regex, filename):
-                flash('The file is not a pdf', 'danger')
-                return redirect("/")
+            if not re.match(filenameRegex, filename):
+                flash('The filename was modified or it is not a bin file', 'danger')
+                return redirect(url_for('index'))
 
-            filename_without_extension = filename.split('.')[0]
-            #Obtener llave privada del emisor
-            #Comprobacion (todos = 0, uno en especifico = id)
-            #Para todos
-             # It is the path where the uploaded file will be stored
-            path = os.path.join(app.config['TMP_FOLDER'], filename)
+            filenameWithoutExtension = filename.split('.')[0]
+            
+            documentPath = os.path.join(TMP_FOLDER, filename)
+
+            # Store the file in the provided path
+            file.save(documentPath)
+
+            # Getting the sender public key
+            with open(f"{PUBLIC_KEY_FOLDER}{senderId}.pem", "rb") as senderPublicKeyFile:
+                senderPublicKey = senderPublicKeyFile.read()
+            
+            # Getting the logged in user id
+            # receiver_id = session.get('id')
+
+            # Getting the user private key
+            # Using a temporary  private key while the login module is finished
+            with open(f"{PRIVATE_KEY_FOLDER}3.pem", "rb") as receiverPrivateKeyFile:
+                receiverPrivateKey = receiverPrivateKeyFile.read()
+
+            # Getting the signature
+            # Using a temporary signature while the database is connected
+            with open(f"{SIGNATURES_FOLDER}{filename}", "rb") as signatureFile:
+                signature = signatureFile.read()
+
+            # Getting the reference to the file to decrypt
+            encryptedDocument = open(documentPath, "rb")
+            # Check if the file was decrypted successfully
+            decrypted = decryptDocument(encryptedDocument, receiverPrivateKey, senderPublicKey, signature, filenameWithoutExtension) 
+            encryptedDocument.close()
+
+            # Open a thread to delete the uploaded file
+            uploadedFileThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
+            uploadedFileThread.daemon = True
+            uploadedFileThread.start()
+
+            if decrypted:
+                # Open a thread to delete the decrypted file
+                pdfThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filenameWithoutExtension}.pdf",))
+                pdfThread.daemon = True
+                pdfThread.start()
+
+                return redirect(url_for('download_file', name=f"{filenameWithoutExtension}.pdf"))
+            else:
+                # Return an error message
+                flash(f'The signature is not authentic. Try later', 'danger')
+                return redirect(url_for('index'))  
+        except:
+            flash('Something went wrong', 'danger')
+            return redirect(url_for('index'))
+    else:
+        flash(f'No file sent', 'danger')
+        return redirect(url_for('index'))
+
+
+  #############################
+ #     Encrypt file route    #
+#############################
+@app.route("/encrypt-file", methods=["POST",])
+def encrypt_file():
+    '''
+        Data needed to encrypt a PDF document:
+        - Sender private key
+        - Receiver public key
+        - Receiver ID
+        - Sender ID
+        - Receiver email
+        - PDF document
+    '''
+
+    # Getting the receiver ID
+    # all = 0, specific user != 0
+    receiverId = request.form.get("receiverId")
+
+    if not receiverId:
+        flash(f'No receiver selected', 'danger')
+        return redirect(url_for('index'))
+    
+    if int(receiverId) < 0:
+        flash(f'Invalid receiver ID', 'danger')
+        return redirect(url_for('index'))
+
+    # Getting the sender ID
+    # Using a temporary senderId while the login module is not ready
+    senderId = "2"
+
+    # Check if the post request has the file part
+    if 'file' not in request.files:
+        flash(f'No file part', 'danger')
+        return redirect(url_for('index'))
+
+    # Getting the file from the form
+    file = request.files['file']
+
+    # If user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        flash(f'No selected file', 'danger')
+        return redirect(url_for('index'))
+
+    if file:
+        try:
+            filename = secure_filename(file.filename)
+            # Check if the filename fulfills the standard
+            # Filename standard: senderID_receiverID_encryptedFilename_encryptionID.bin
+            filenameRegex = r"^[\w\-]+\.pdf$"
+
+            if not re.match(filenameRegex, filename):
+                flash('The file is not a PDF file or the filename is not valid', 'danger')
+                return redirect(url_for('index'))
+
+            filenameWithoutExtension = filename.split('.')[0]
+
+            # It is the path where the uploaded file will be stored
+            path = os.path.join(TMP_FOLDER, filename)
 
             # Store the file in the provided path
             file.save(path)
 
-
+            # Getting the emisor private key
+            with open(f"{PRIVATE_KEY_FOLDER}{senderId}.pem", "rb") as privateKeyFile:
+                    emisorPrivateKey = privateKeyFile.read()
+            
             if receiverId == "0":
+                '''
+                    Required data from the DB:
+                    - Receivers ID
+                    - Receivers email
+                    - Emisor encrypted documents quantity
+                '''
+                # For each receiver sign and encrypt the PDF file
                 pass
-                #Traer de la BD
-                #Id, correo(Receptores), numArchivo(Emisor)
-                #Por cada receptor obtener su llave pública
-                #Se firma el documento()
-                #cifrar documento
             else:
-                correo = "marymorrera12@gmail.com"
+                '''
+                    Required data from the DB:
+                    - Receiver email
+                    - Emisor encrypted documents quantity
+                '''
+                receiverEmail = "edgar.alejandro.fuentes98@gmail.com"
                 numeroCifrados = "3"
-                idEmisor = "2"
                 with open(f"{PUBLIC_KEY_FOLDER}{receiverId}.pem", "rb") as publicKeyFile:
-                    publicKey = publicKeyFile.read()
+                    receiverPublicKey = publicKeyFile.read()
                 
-                with open(f"{PRIVATE_KEY_FOLDER}{idEmisor}.pem", "rb") as privateKeyFile:
-                    privateKey = privateKeyFile.read()
+                with open(path, "rb") as PDF:
+                    plaintext = PDF.read()
+                
+                # Building the encrypted filename format
+                encryptedFilename = f"{senderId}_{receiverId}_{filenameWithoutExtension}_{int(numeroCifrados) + 1}.bin"
 
-                with open(path, "rb") as plainText:
-                    plainText = plainText.read()
+                signed = signDocument(plaintext, emisorPrivateKey, f"{SIGNATURES_FOLDER}{encryptedFilename}")
+                
+                encrypted = encryptDocument(plaintext, receiverPublicKey,encryptedFilename)
+                
+                # Check if the PDF was encrypted successfully
+                if signed and encrypted:
+                    sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename)
+                    # Check if the email was sent successfully
+                    if sent:
+                        flash('Document encrypted successfully.', 'success')
+                        # Open a thread to delete the uploaded file
+                        uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
+                        uploadedThread.daemon = True
+                        uploadedThread.start()
 
-                encrypt_document(plainText,publicKey,idEmisor,receiverId,int(numeroCifrados)+1,filename_without_extension)
-                sendDocument(correo,f"{TMP_FOLDER}{idEmisor}_{receiverId}_{filename_without_extension}_{int(numeroCifrados)+1}.bin", f"{idEmisor}_{receiverId}_{filename_without_extension}_{int(numeroCifrados)+1}.bin")
-#Sign section ---------------------------------------------------------------------------------------------------------------------------------------------------
-                sign_document(plainText, privateKey,receiverId,idEmisor,filename_without_extension,int(numeroCifrados)+1)
-#**Sign section -------------------------------------------------------------------------------------------------------------------------------------------------
-                flash('Encrypted file', 'success')
-                return redirect("/")
+                        # Open a thread to delete the encrypted document
+                        encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
+                        encryptedThread.daemon = True
+                        encryptedThread.start()
+                        return redirect(url_for('index'))
+                    else:
+                        # Open a thread to delete the signature
+                        signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
+                        signatureThread.daemon = True
+                        signatureThread.start()
+
+                        # Open a thread to delete the uploaded file
+                        uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
+                        uploadedThread.daemon = True
+                        uploadedThread.start()
+
+                        # Open a thread to delete the encrypted document
+                        encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
+                        encryptedThread.daemon = True
+                        encryptedThread.start()
+                        
+                        flash("There was an error trying to send the encrypted file. Try later.", "danger")
+                        return redirect(url_for('index'))
+                else:
+                    # Open a thread to delete the signature
+                    signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
+                    signatureThread.daemon = True
+                    signatureThread.start()
+
+                    # Open a thread to delete the encrypted document
+                    encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
+                    encryptedThread.daemon = True
+                    encryptedThread.start()
+
+                    flash("There was an error trying to encrypt the file. Try later.", "danger")
+                    return redirect(url_for('index'))
         except:
-            pass
+            # Open a thread to delete the signature
+            signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
+            signatureThread.daemon = True
+            signatureThread.start()
 
+            # Open a thread to delete the uploaded file
+            uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
+            uploadedThread.daemon = True
+            uploadedThread.start()
+
+            # Open a thread to delete the encrypted document
+            encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
+            encryptedThread.daemon = True
+            encryptedThread.start()
+            
+            flash("There was an error trying to encrypt the file. Try later.", "danger")
+            return redirect(url_for('index'))
+
+
+  #############################
+ #     Download file route   #
+#############################
 @app.route('/uploads/<name>')
 def download_file(name):
     # Send the request to download a file
-    return send_from_directory(app.config["TMP_FOLDER"], name, as_attachment=True)
-
-
-#*Cipher section -------------------------------------------------------------------------------------------------------------------
+    flash("Decrypted file successfully", "success")
+    return send_from_directory(TMP_FOLDER, name, as_attachment=True)

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <title>Project Cryptography</title>
+    <link href="/static/img/favicon.ico" rel="icon">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" />
     <!-- Google Fonts Roboto -->
@@ -19,17 +20,18 @@
 </head>
 <body>
   {% with messages = get_flashed_messages(with_categories=True) %}
-  {% if messages %}
-     {% for category, message in messages %}
-       <script>show_message("{{ category.title() }}!", "{{message}}", "{{ category }}" == "danger" ? "error" : "{{ category }}");</script>
-     {% endfor %}
-  {% endif %}
-{% endwith %}
-      <!--Main Navigation-->
+    {% if messages %}
+      {% for category, message in messages %}
+        <script>show_message("{{ category.title() }}!", "{{message}}", "{{ category }}" == "danger" ? "error" : "{{ category }}");</script>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  <!--Main Navigation-->
   <header>
     <style>
       #intro {
         background-image: url("https://mdbootstrap.com/img/new/fluid/city/018.jpg");
+        background-image: url("../static/img/banner.jpg");
         height: 100vh;
       }
 
@@ -72,7 +74,7 @@
           <ul class="navbar-nav d-flex flex-row">
             <!-- Icons -->
             <li class="nav-item me-3 me-lg-0">
-              <a class="nav-link" href="https://github.com/EdgarRamirezFuentes/protecting_sensitive_information/tree/development" rel="nofollow" target="_blank">
+              <a class="nav-link" href="https://github.com/EdgarRamirezFuentes/protecting_sensitive_information/" rel="nofollow" target="_blank">
                 <i class="fab fa-github"></i>
               </a>
             </li>
@@ -102,11 +104,9 @@
   <!--Main layout-->
   <main class="mt-5">
     <div class="container">
-
       <!--Section: Content-->
       <section class="mb-5" id="enc">
         <h4 class="mb-5 text-center"><strong>CIPHER A DOCUMENT</strong></h4>
-
         <div class="row d-flex justify-content-center">
           <div class="col-md-6">
             <form action = "/encrypt-file" method = "post" enctype=multipart/form-data>
@@ -129,14 +129,6 @@
                   </div>
                 </div>
               </div>
-
-
-              <!-- Password input -->
-              <div class="form-outline mb-4">
-                <input type="password" id="form3Example4" class="form-control"  name="pswd"/>
-                <label class="form-label" for="form3Example4" >Password</label>
-              </div>
-
               <!-- Submit button -->
               <button type="submit" class="btn btn-primary btn-block mb-4">
                 Cipher
@@ -148,11 +140,9 @@
       <!--Section: Content-->
 
       <hr class="my-5" />
-
       <!--Section: Content-->
       <section class="mb-5" id="dec">
         <h4 class="mb-5 text-center"><strong>DECIPHER A DOCUMENT</strong></h4>
-
         <div class="row d-flex justify-content-center">
           <div class="col-md-6">
             <form action = "/decrypt-file" method = "post" enctype=multipart/form-data>
@@ -178,13 +168,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Password input -->
-              <div class="form-outline mb-4">
-                <input type="password" id="form3Example4" class="form-control"  name="pswd"/>
-                <label class="form-label" for="form3Example4">Password</label>
-              </div>
-
               <!-- Submit button -->
               <button type="submit" class="btn btn-primary btn-block mb-4">
                 Decipher
@@ -194,16 +177,10 @@
         </div>
       </section>
       <!--Section: Content-->
-
-
-    
-
       <hr class="my-5" />
-
       <!--Section: Content-->
       <section class="text-center">
-        <h4 class="mb-5"><strong>Desarrolladores</strong></h4>
-
+        <h4 class="mb-5"><strong>Developers</strong></h4>
         <div class="row">
           <div class="col-lg-4 col-md-12 mb-4">
             <div class="card">
@@ -219,16 +196,14 @@
                   Some quick example text to build on the card title and make up the bulk of the
                   card's content.
                 </p>
-                
               </div>
             </div>
           </div>
-
           <div class="col-lg-4 col-md-6 mb-4">
             <div class="card">
               <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
-                <img src="https://mdbootstrap.com/img/new/standard/nature/023.jpg" class="img-fluid" />
-                <a href="#!">
+                <img src="../static/img/edgar.jpg" class="img-fluid" />
+                <a href="https://github.com/EdgarRamirezFuentes" target="_blank">
                   <div class="mask" style="background-color: rgba(251, 251, 251, 0.15);"></div>
                 </a>
               </div>
@@ -238,11 +213,9 @@
                   Some quick example text to build on the card title and make up the bulk of the
                   card's content.
                 </p>
-                
               </div>
             </div>
           </div>
-
           <div class="col-lg-4 col-md-6 mb-4">
             <div class="card">
               <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
@@ -264,10 +237,7 @@
         </div>
       </section>
       <!--Section: Content-->
-
       <hr class="my-5" />
-
-      
     </div>
   </main>
   <!--Main layout-->
@@ -276,8 +246,8 @@
   <footer class="bg-light text-lg-start">
     <!-- Copyright -->
     <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
-      © 2020 Copyright:
-      <a class="text-dark" href="https://mdbootstrap.com/">MDBootstrap.com</a>
+      © 2021 Copyright:
+      <a class="text-dark" href="https://www.escom.ipn.mx/">ESCOM-IPN</a>
     </div>
     <!-- Copyright -->
   </footer>

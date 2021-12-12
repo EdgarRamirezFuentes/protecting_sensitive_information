@@ -1,11 +1,19 @@
 # Protecting sensitive information documentation
 ### TODO 
-- [ ] Encryption module 
 - [ ] Login module 
+
 ### In progress  
-- [ ] Model the database - Ivette
-- [ ] Design the UI for the system - Mary
+- [ ] Encryption module - Ivette
+- [ ] Connect the database - Ivette
+- [ ] Use SHA-3 256 to sign the documents - Edgar
+
 ## In review
-- [ ] Decryption process - Edgar
-- [ ] Add Exception handling to the decryption module - Edgar
+
 ### Done 
+- [x] Decryption process - Edgar
+- [x] Add Exception handling to the decryption module - Edgar
+- [x] Connect the frontend with the backend - Edgar
+- [x] Design the UI for the system - Mary
+- [x] Email module - Edgar
+- [x] Signature module - Ivette
+- [x] Model the database - Ivette

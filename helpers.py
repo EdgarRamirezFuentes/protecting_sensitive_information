@@ -1,3 +1,13 @@
+         ###########################################################
+        #         Protecting sensitive information                #
+       #             Cryptography final project                  #
+      #                   Semester 2022-1                       #
+     #                                                         #
+    #                                                         #
+   #            Ramírez Fuentes Edgar Alejandro              #
+  #             Salmerón Contreras María José               #
+ #             Rodríguez Melgoza Ivette                    #
+###########################################################
 from Crypto.Signature import pss
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
@@ -10,40 +20,21 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-ALLOWED_EXTENSIONS = {'bin', 'pdf'}
 TMP_FOLDER = './assets/tmp/'
 SIGNATURES_FOLDER = "./assets/signatures/"
 PUBLIC_KEY_FOLDER = "./assets/public_keys/" 
 PRIVATE_KEY_FOLDER = "./assets/private_keys/"
 
-def allowed_file(filename : str):
-    '''
-        Check if the introduced file is allowed
-
-        Paramaters
-        -----------
-
-        filename : str
-            It is the filename that will be verified
-
-        Return
-        ----------
-        True if the file is allowed. Otherwise, False
-    '''
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def verify_signature(decrypted_document : bytes, sender_public_key : bytes, signature : bytes) -> bool:
+def verifySignature(decryptedDocument : bytes, senderPublicKey : bytes, signature : bytes) -> bool:
     '''
         Veryfy if the original signature is the same than the obtained signature from the decrypted document
 
         Parameters
         -----------
-        decrypted_document : bytes
+        decryptedDocument : bytes
             It is the decrypted document that will be used to generate a signature
 
-        sender_public_key : bytes
+        senderPublicKey : bytes
             It is the sender public key that will be used to verify if the obtained signature is the same than the original signature
 
         signature : bytes
@@ -55,13 +46,12 @@ def verify_signature(decrypted_document : bytes, sender_public_key : bytes, sign
     '''
     try:
         # Getting the sender public key
-        key = RSA.import_key(sender_public_key)
+        key = RSA.import_key(senderPublicKey)
 
         # Hashing the decrypted document
-        h = SHA256.new(decrypted_document)
+        h = SHA256.new(decryptedDocument)
 
         verifier = pss.new(key)
-        print("Llegue aquí")
         try:
             # Compare the hashed decrypted document signature with the original signature
             verifier.verify(h, signature)
@@ -74,7 +64,7 @@ def verify_signature(decrypted_document : bytes, sender_public_key : bytes, sign
         return False
 
 
-def decrypt_document(encrypted_document : bytes, receiver_private_key : bytes, sender_public_key : bytes, original_signature : bytes, filename : str):
+def decryptDocument(encryptedDocument : bytes, receiverPrivateKey : bytes, senderPublicKey : bytes, originalSignature : bytes, filename : str) -> bool:
     '''
         Decrypt a document using a hybrid encryption scheme. 
         It uses RSA with PKCS#1 OAEP for asymmetric encryption of an AES session key.
@@ -82,16 +72,16 @@ def decrypt_document(encrypted_document : bytes, receiver_private_key : bytes, s
         Parameters
         -----------
 
-        encrypted_document : bytes
+        encryptedDocument : bytes
             It is a reference (pointer) to the document that contains the encrypted document
         
-        receiver_private_key : bytes
+        receiverPrivateKey : bytes
             It is the receiver private key that will be used to decrypt the AES session key
 
-        sender_public_key : bytes
+        senderPublicKey : bytes
             It is the sender public key that will be used to verify the signature
 
-        original_signature : bytes
+        originalSignature : bytes
             It is the original signature of the file that will be decrypted
 
         filename : str
@@ -103,64 +93,49 @@ def decrypt_document(encrypted_document : bytes, receiver_private_key : bytes, s
     '''
     try:
         # Getting the receiver private key
-        private_key = RSA.import_key(receiver_private_key)
+        privateKey = RSA.import_key(receiverPrivateKey)
 
         # Getting the necessary information to decrypt the document
-        enc_session_key, nonce, tag, ciphertext = \
-        [ encrypted_document.read(x) for x in (private_key.size_in_bytes(), 16, 16, -1) ]
+        encSessionKey, nonce, tag, ciphertext = \
+        [ encryptedDocument.read(x) for x in (privateKey.size_in_bytes(), 16, 16, -1) ]
 
         # Decrypting the session key using the receiver private key
-        cipher_rsa = PKCS1_OAEP.new(private_key)
-        session_key = cipher_rsa.decrypt(enc_session_key)
+        cipherRSA = PKCS1_OAEP.new(privateKey)
+        sessionKey = cipherRSA.decrypt(encSessionKey)
 
         # Decrypting the document using the AES session key
-        cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
-        decrypted_document = cipher_aes.decrypt_and_verify(ciphertext, tag)
+        cipherAES = AES.new(sessionKey, AES.MODE_EAX, nonce)
+        decryptedDocument = cipherAES.decrypt_and_verify(ciphertext, tag)
 
         # Verifying the signature
-        is_valid_signature = verify_signature(decrypted_document, sender_public_key, original_signature)
+        is_valid_signature = verifySignature(decryptedDocument, senderPublicKey, originalSignature)
 
         if is_valid_signature:
             # Writing the decrypted document in a new PDF file
-            with open(f"{TMP_FOLDER}{filename}.pdf", "wb") as decrypted_document_file:
-                decrypted_document_file.write(decrypted_document)
+            with open(f"{TMP_FOLDER}{filename}.pdf", "wb") as decryptedDocument_file:
+                decryptedDocument_file.write(decryptedDocument)
             return True
         else:
             return False
     except:
-        print("Entre al except")
         return False
 
 
-def generate_rsa_keys() -> RSA.RsaKey:
+def deleteFile(filePath):
     '''
-        Generate a RSA key of 2048 bits
-
-        Return
-        --------
-        rsa_key: RsaKey
-            The generated key
-    '''
-    return RSA.generate(2048)
-
-
-def delete_tmp_file(filename):
-    '''
-        Delete a tmp file if it exists
+        Delete a file if it exists
 
         Parameters
         -----------
-        filename : str
-            It is the file that will be deleted
+        filePath : str
+            It is the path of the file that will be deleted
     '''
-    time.sleep(30)
-    if os.path.exists(f"{TMP_FOLDER}{filename}"):
-        os.remove(f"{TMP_FOLDER}{filename}")
+    if os.path.exists(filePath):
+        time.sleep(30)
+        os.remove(filePath)
 
-def validatePassword(password, idEmisor):
-    pass 
 
-def sign_document(document : bytes, sender_private_key : bytes,idReceptor,idEmisor,nombreArchivo,idCifrado) -> None:
+def signDocument(document : bytes, senderPrivateKey : bytes, documentPath : str) -> bool:
     '''
         Generate a sign for the provided document
 
@@ -169,21 +144,33 @@ def sign_document(document : bytes, sender_private_key : bytes,idReceptor,idEmis
         document : bytes
             It is the document that will be signed
 
-        sender_private_key : bytes
+        senderPrivateKey : bytes
             It is the private key that will be used to sign the document
+
+        documentPath : str
+            It is the path where the document is stored
+
+        Return
+        --------
+        True if the sign was generated successfully, otherwise False
     '''
-    # Getting the sender private key
-    key = RSA.import_key(sender_private_key)
-    # Hashing the document
-    h = SHA256.new(document)
-    # Signing the hashed document
-    signature = pss.new(key).sign(h)
+    try:
+        # Getting the sender private key
+        key = RSA.import_key(senderPrivateKey)
+        # Hashing the document
+        h = SHA256.new(document)
+        # Signing the hashed document
+        signature = pss.new(key).sign(h)
 
-    # Storing the signature
-    with open(f"{SIGNATURES_FOLDER}{idEmisor}_{idReceptor}_{nombreArchivo}_{idCifrado}.bin", "wb") as sign_file:
-        sign_file.write(signature)
+        # Storing the signature
+        with open(documentPath, "wb") as signFile:
+            signFile.write(signature)
+        return True
+    except:
+        return False
 
-def encrypt_document(document : bytes, receiver_public_key : bytes, idEmisor,idReceptor,numeroDocumento,nombreArchivo):
+
+def encryptDocument(document : bytes, receiverPublicKey : bytes, encryptedDocumentFilename : str) -> bool:
     '''
         Encrypt a document using a hybrid encryption scheme. 
         It uses RSA with PKCS#1 OAEP for asymmetric encryption of an AES session key.
@@ -193,52 +180,76 @@ def encrypt_document(document : bytes, receiver_public_key : bytes, idEmisor,idR
         document : bytes
             It is the document that will be encrypted
 
-        receiver_public_key : bytes
+        receiverPublicKey : bytes
             It is the public key that will be used to encrypt the document
+
+        Return
+        -------
+        True if the document was encrypted successfully, otherwise False
     '''
-
-    # Getting the receiver public key
-    key = RSA.importKey(receiver_public_key)
-
-    # Generating the AES session key 
-    session_key = get_random_bytes(16)
-
-    # Encrypting the session key using the receiver public key
-    cipher_rsa = PKCS1_OAEP.new(key)
-    enc_session_key = cipher_rsa.encrypt(session_key)
-
-    # Encrypting the document using the AES session key
-    cipher_aes = AES.new(session_key, AES.MODE_EAX)
-    ciphertext, tag = cipher_aes.encrypt_and_digest(document)
-
-    # Storing the encrypted data
-    with open(f"{TMP_FOLDER}{idEmisor}_{idReceptor}_{nombreArchivo}_{numeroDocumento}.bin", "wb") as encrypted_file:
-        [ encrypted_file.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext) ]    
-
-def sendDocument(email,path,fileName):
     try:
+        # Getting the receiver public key
+        key = RSA.importKey(receiverPublicKey)
 
-        secret_key = "Usuario123_"
-        sender_email = "graphycrypto8@gmail.com"
-        receiver_email = email
+        # Generating the AES session key 
+        sessionKey = get_random_bytes(16)
+
+        # Encrypting the session key using the receiver public key
+        cipherRSA = PKCS1_OAEP.new(key)
+        encSessionKey = cipherRSA.encrypt(sessionKey)
+
+        # Encrypting the document using the AES session key
+        cipherAES = AES.new(sessionKey, AES.MODE_EAX)
+        ciphertext, tag = cipherAES.encrypt_and_digest(document)
+
+        # Storing the encrypted data
+        with open(f"{TMP_FOLDER}{encryptedDocumentFilename}", "wb") as encrypted_file:
+            [ encrypted_file.write(x) for x in (encSessionKey, cipherAES.nonce, tag, ciphertext) ]
+        return True  
+    except:
+        return False  
+
+
+def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> bool: 
+    '''
+        Send an email that contains the encrypted document
+
+        Parameters
+        -----------
+        receiverEmail : str
+            It is the email that will receive the encryped document
+
+        documentPath : str
+            It is the path where the encrypted file is stored
+
+        filename : str
+            It is the encrypted file filename
+
+        Return
+        -----------
+        True if the email was sent successfully, otherwise False
+    '''
+    try:
+        # Project email credentials
+        secretkey = "Usuario123_"
+        senderEmail = "graphycrypto8@gmail.com"
         message = MIMEMultipart()
-        message["From"] = sender_email
-        message['To'] = receiver_email
-        message['Subject'] = "Archivo cifrado - " +fileName
-        attachment = open(path,'rb')
+        # Email info
+        message["From"] = senderEmail
+        message['To'] = receiverEmail
+        message['Subject'] = f"Archivo cifrado - {filename}"
+        attachment = open(documentPath,'rb')
         obj = MIMEBase('application','octet-stream')
         obj.set_payload((attachment).read())
         encoders.encode_base64(obj)
-        obj.add_header('Content-Disposition',"attachment; filename= "+fileName)
+        obj.add_header('Content-Disposition',f"attachment; filename={filename}")
         message.attach(obj)
-        my_message = message.as_string()
-        email_session = smtplib.SMTP('smtp.gmail.com',587)
-        email_session.starttls()
-        email_session.login(sender_email, secret_key)
-        email_session.sendmail(sender_email,receiver_email,my_message)
-        email_session.quit()
-        print("YOUR MAIL HAS BEEN SENT SUCCESSFULLY")
+        myMessage = message.as_string()
+        emailSession = smtplib.SMTP('smtp.gmail.com',587)
+        emailSession.starttls()
+        emailSession.login(senderEmail, secretkey)
+        emailSession.sendmail(senderEmail,receiverEmail,myMessage)
+        emailSession.quit()
         return True
     except: 
-        print("EMAIL MESSAGE")
         return False
