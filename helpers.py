@@ -215,9 +215,10 @@ def encrypt_document(document : bytes, receiver_public_key : bytes, idEmisor,idR
 
 def sendDocument(email,path,fileName):
     try:
-        secret_key = ""
-        sender_email = "ivette_ro_m@hotmail.com"
+        secret_key = os.environ.get("SECRET_KEY")
+        sender_email = "edgar.alejandro.fuentes98@gmail.com"
         receiver_email = email
+        print("path", path)
         message = MIMEMultipart()
         message["From"] = sender_email
         message['To'] = receiver_email
@@ -237,4 +238,5 @@ def sendDocument(email,path,fileName):
         print("YOUR MAIL HAS BEEN SENT SUCCESSFULLY")
         return True
     except: 
+        print("EMAIL MESSAGE")
         return False

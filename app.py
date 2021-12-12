@@ -131,7 +131,7 @@ def encrypt_file():
     if not receiverId:
         #warning
         flash(f'No selected receiver', 'danger')
-        return redirect(request.url)
+        return render_template("decrypt_file.html")
     #Obtener del inicio de sesion *PENDIENTE
     senderId = "1"
 
@@ -139,7 +139,7 @@ def encrypt_file():
     # Check if the post request has the file part
     if 'file' not in request.files:
         flash(f'No file part', 'danger')
-        return redirect(request.url)
+        return render_template("decrypt_file.html")
     #obteniendo el archivo
     file = request.files['file']
 
@@ -147,7 +147,7 @@ def encrypt_file():
     # submit an empty part without filename
     if file.filename == '':
         flash(f'No selected file', 'danger')
-        return redirect(request.url)
+        return render_template("decrypt_file.html")
 
     # is_allowed_file = allowed_file(file.filename)
     # Obteniendo 4
@@ -156,7 +156,7 @@ def encrypt_file():
     if not password:
         #warning
         flash(f'No password', 'danger')
-        return redirect(request.url)
+        return render_template("decrypt_file.html")
 
     #falta validatePassword
     if file:
@@ -166,11 +166,11 @@ def encrypt_file():
             print(filename, " filename")
             # Check if the filename fulfills the standard
             # Filename standard: senderID_receiverID_encryptedFilename_encryptionID.bin
-            filename_regex = r"^\w+.pdf$"
+            filename_regex = r"^.+\.pdf$"
 
             if not re.match(filename_regex, filename):
                 flash('The file is not a pdf', 'danger')
-                return redirect(request.url)
+                return render_template("decrypt_file.html")
 
             filename_without_extension = filename.split('.')[0]
             #Obtener llave privada del emisor
@@ -206,9 +206,10 @@ def encrypt_file():
                 encrypt_document(plainText,publicKey,idEmisor,receiverId,int(numeroCifrados)+1,filename_without_extension)
                 sendDocument(correo,f"{TMP_FOLDER}{idEmisor}_{receiverId}_{filename_without_extension}_{int(numeroCifrados)+1}.bin",filename_without_extension)
                 flash('Encrypted file', 'success')
-                return redirect("/")
+                return render_template("decrypt_file.html")
         except:
             pass
+
 @app.route('/uploads/<name>')
 def download_file(name):
     # Send the request to download a file
