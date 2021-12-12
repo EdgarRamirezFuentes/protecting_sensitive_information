@@ -13,7 +13,7 @@ from flask import Flask, flash, redirect, render_template, request, session, sen
 from flask_session import Session
 from werkzeug.utils import secure_filename
 from helpers import deleteFile, decryptDocument, encryptDocument,sendDocument, signDocument
-from helpers import TMP_FOLDER, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER
+from helpers import TMP_FOLDER, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER,dataBaseConnection,lectureOfNumArchivos,lectureOfUsuario,closeDB
 from threading import Thread
 import os, re
 
@@ -143,7 +143,22 @@ def encrypt_file():
         - Receiver email
         - PDF document
     '''
+# DB Connection
+    conexion = dataBaseConnection()
 
+
+#OBTENIENDO DATOS DE PRUEBA
+    numeroDeArchivos = lectureOfNumArchivos(conexion)
+    print("Numero de archivos en BD : ",numeroDeArchivos)
+
+    nombreUsuario = lectureOfUsuario(conexion,"nombreUsuario",1)
+    print("Nombre de usuario en BD : ",nombreUsuario)
+
+    contrasena = lectureOfUsuario(conexion,"contrasena",1)
+    print("Contraseña en BD : ", contrasena)
+
+#** OBTENIENDO DATOS DE PRUEBA
+    closeDB(conexion)
     # Getting the receiver ID
     # all = 0, specific user != 0
     receiverId = request.form.get("receiverId")

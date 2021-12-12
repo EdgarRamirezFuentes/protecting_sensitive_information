@@ -19,6 +19,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+import mysql.connector
 
 TMP_FOLDER = './assets/tmp/'
 SIGNATURES_FOLDER = "./assets/signatures/"
@@ -253,3 +254,52 @@ def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> boo
         return True
     except: 
         return False
+
+# data base connection
+def dataBaseConnection()->mysql.connector:
+    conexion = mysql.connector.connect(
+            user = "root", 
+            password = "REVOLUCIONde1910", 
+            host="localhost",
+            database="bdcryptography", 
+            port="3306"
+            )
+    if conexion.is_connected():
+            print("Successful connection")
+            infoServer = conexion.get_server_info()
+            print("Server information: ",infoServer)  
+    else:
+            print("Error during connection")
+    return conexion
+#*data base connection
+
+# DB LECTURE
+def lectureOfNumArchivos(conexion)->int:    
+            cursor = conexion.cursor()
+            cursor.execute("SELECT database();")
+            registro = cursor.fetchone()
+            select = "SELECT numero FROM numarchivos;"
+            cursor.execute(select)   
+            resultados = cursor.fetchone() 
+            resultado = ''.join(str(resultados))
+            resultado = resultado.replace("(","")
+            resultado = resultado.replace(")","")
+            resultado = resultado.replace(",","")
+            return int(resultado)
+
+def lectureOfUsuario(conexion,elementoABuscar,idUsuario)->str:
+            cursor = conexion.cursor()
+            cursor.execute("SELECT database();")
+            registro = cursor.fetchone()
+            select = "SELECT "+elementoABuscar+" FROM usuario WHERE IdUsuario="+str(idUsuario)+";"
+            cursor.execute(select)   
+            resultados = cursor.fetchone() 
+            resultado = ''.join(resultados)
+            resultado = resultado.replace("(","")
+            resultado = resultado.replace(")","")
+            resultado = resultado.replace("'","")
+            return resultado
+# **DB LECTURE
+
+def closeDB(conexion):
+    conexion.close()
