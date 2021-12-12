@@ -5,7 +5,6 @@ from helpers import delete_tmp_file, allowed_file, decrypt_document, delete_tmp_
 from threading import Thread
 import os, re
 
- 
 app = Flask(__name__)
 app.config['TMP_FOLDER'] = TMP_FOLDER
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -84,7 +83,9 @@ def decrypt_file():
 
                 # Getting the signature
                 # Using a temporary signature while the database is connected
-                with open(f"./assets/signatures/{filename_without_extension}.bin", "rb") as signature_file:
+
+                print(f"{SIGNATURES_FOLDER}{filename}")
+                with open(f"{SIGNATURES_FOLDER}{filename}", "rb") as signature_file:
                     signature = signature_file.read()
 
                 # It is the path where the uploaded file will be stored
@@ -182,7 +183,7 @@ def encrypt_file():
             print(filename, " filename")
             # Check if the filename fulfills the standard
             # Filename standard: senderID_receiverID_encryptedFilename_encryptionID.bin
-            filename_regex = r"^\w+.pdf$"
+            filename_regex = r"^.+\.pdf$"
 
             if not re.match(filename_regex, filename):
                 flash('The file is not a pdf', 'danger')
@@ -220,7 +221,7 @@ def encrypt_file():
                     plainText = plainText.read()
 
                 encrypt_document(plainText,publicKey,idEmisor,receiverId,int(numeroCifrados)+1,filename_without_extension)
-                sendDocument(correo,f"{TMP_FOLDER}{idEmisor}_{receiverId}_{filename_without_extension}_{int(numeroCifrados)+1}.bin",filename_without_extension)
+                sendDocument(correo,f"{TMP_FOLDER}{idEmisor}_{receiverId}_{filename_without_extension}_{int(numeroCifrados)+1}.bin", f"{idEmisor}_{receiverId}_{filename_without_extension}_{int(numeroCifrados)+1}.bin")
 #Sign section ---------------------------------------------------------------------------------------------------------------------------------------------------
                 sign_document(plainText, privateKey,receiverId,idEmisor,filename_without_extension,int(numeroCifrados)+1)
 #**Sign section -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -228,6 +229,7 @@ def encrypt_file():
                 return redirect("/")
         except:
             pass
+
 @app.route('/uploads/<name>')
 def download_file(name):
     # Send the request to download a file
