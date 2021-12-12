@@ -259,7 +259,7 @@ def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> boo
 def dataBaseConnection()->mysql.connector:
     conexion = mysql.connector.connect(
             user = "root", 
-            password = "REVOLUCIONde1910", 
+            password = "", 
             host="localhost",
             database="bdcryptography", 
             port="3306"
