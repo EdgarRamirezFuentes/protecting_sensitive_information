@@ -9,7 +9,7 @@
  #             Rodríguez Melgoza Ivette                    #
 ###########################################################
 from Crypto.Signature import pss
-from Crypto.Hash import SHA256
+from Crypto.Hash import SHA256, SHA3_256
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES, PKCS1_OAEP
 import os, shutil, time
@@ -50,7 +50,8 @@ def verifySignature(decryptedDocument : bytes, senderPublicKey : bytes, signatur
         key = RSA.import_key(senderPublicKey)
 
         # Hashing the decrypted document
-        h = SHA256.new(decryptedDocument)
+        # h = SHA256.new(decryptedDocument)
+        h = SHA3_256.new(decryptedDocument)
 
         verifier = pss.new(key)
         try:
@@ -159,7 +160,8 @@ def signDocument(document : bytes, senderPrivateKey : bytes, documentPath : str)
         # Getting the sender private key
         key = RSA.import_key(senderPrivateKey)
         # Hashing the document
-        h = SHA256.new(document)
+        # h = SHA256.new(document)
+        h = SHA3_256.new(document)
         # Signing the hashed document
         signature = pss.new(key).sign(h)
 

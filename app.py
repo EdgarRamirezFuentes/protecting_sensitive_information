@@ -144,21 +144,21 @@ def encrypt_file():
         - PDF document
     '''
 # DB Connection
-    conexion = dataBaseConnection()
+    #conexion = dataBaseConnection()
 
 
 #OBTENIENDO DATOS DE PRUEBA
-    numeroDeArchivos = lectureOfNumArchivos(conexion)
-    print("Numero de archivos en BD : ",numeroDeArchivos)
+    #numeroDeArchivos = lectureOfNumArchivos(conexion)
+    #print("Numero de archivos en BD : ",numeroDeArchivos)
 
-    nombreUsuario = lectureOfUsuario(conexion,"nombreUsuario",1)
-    print("Nombre de usuario en BD : ",nombreUsuario)
+    #nombreUsuario = lectureOfUsuario(conexion,"nombreUsuario",1)
+    #print("Nombre de usuario en BD : ",nombreUsuario)
 
-    contrasena = lectureOfUsuario(conexion,"contrasena",1)
-    print("Contraseña en BD : ", contrasena)
+    #contrasena = lectureOfUsuario(conexion,"contrasena",1)
+    #print("Contraseña en BD : ", contrasena)
 
 #** OBTENIENDO DATOS DE PRUEBA
-    closeDB(conexion)
+    #closeDB(conexion)
     # Getting the receiver ID
     # all = 0, specific user != 0
     receiverId = request.form.get("receiverId")
@@ -227,7 +227,7 @@ def encrypt_file():
                     - Receiver email
                     - Emisor encrypted documents quantity
                 '''
-                receiverEmail = "edgar.alejandro.fuentes98@gmail.com"
+                receiverEmail = "marymorrera12@gmail.com"
                 numeroCifrados = "3"
                 with open(f"{PUBLIC_KEY_FOLDER}{receiverId}.pem", "rb") as publicKeyFile:
                     receiverPublicKey = publicKeyFile.read()
