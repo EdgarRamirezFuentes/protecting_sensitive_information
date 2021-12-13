@@ -1,5 +1,5 @@
 pycryptodome
 Flask
-pymysql
+mysql-connector-python
 Flask-Session
 requests
