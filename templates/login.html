@@ -1,47 +1,63 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<title>Project Cryptography</title>
-<meta name='viewport' content='width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no'/>
-<meta name="description" content="">
-<meta name="keywords" content="">
-<link href="../static/fontawesome/css/all.min.css" rel="stylesheet">
-<link href="../static/materialize/css/materialize.min.css" rel="stylesheet">
-<link href="../static/js/plugins/validetta/validetta.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
-<link href="../static/css/general.css" rel="stylesheet">
-<!-- Muy importante respetar el orden como se incuyen los js -->
-<script src="../static/js/jquery-3.4.1.min.js"></script>
-<script src="../static/materialize/js/materialize.min.js"></script>
-<script src="../static/js/plugins/validetta/validetta.min.js"></script>
-<script src="../static/js/plugins/validetta/validettaLang-es-ES.js"></script>
-<script src="../static/js/plugins/confirm/jquery-confirm.min.js"></script>
-<!--<script src="./js/index.js"></script>-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Project Cryptography</title>
+    <meta name='viewport'
+        content='width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no' />
+    <link href="/static/img/favicon.ico" rel="icon">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <link href="../static/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="../static/materialize/css/materialize.min.css" rel="stylesheet">
+    <link href="../static/js/plugins/validetta/validetta.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+    <link href="../static/css/general.css" rel="stylesheet">
+    <!-- Muy importante respetar el orden como se incuyen los js -->
+    <script src="../static/js/jquery-3.4.1.min.js"></script>
+    <script src="../static/materialize/js/materialize.min.js"></script>
+    <script src="../static/js/plugins/validetta/validetta.min.js"></script>
+    <script src="../static/js/plugins/validetta/validettaLang-es-ES.js"></script>
+    <script src="../static/js/plugins/confirm/jquery-confirm.min.js"></script>
+    <!--<script src="./js/index.js"></script>-->
+    <script src="../static/js/alerts.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <script>
+                    show_message("{{ category.title() }}!", "{{message}}", "{{ category }}" == "danger" ? "error" : "{{ category }}");
+                </script>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <header>
         <img src="../static/img/header20221.jpg" class="responsive-img">
     </header>
     <main class="valign-wrapper">
         <div class="container">
-            <form id="formFrontEnd" autocomplete="off">
-            <div class="row">
-                <div class="col s12 m6 input-field">
-                    <i class="fas fa-user prefix blue-text"></i>
-                    <label for="user">User</label>
-                    <input type="text" id="user" name="user" maxlength="10" data-validetta="required,number,minLength[8],maxLength[10]">
+            <form id="formFrontEnd" autocomplete="off" method="POST">
+                <div class="row">
+                    <div class="col s12 m6 input-field">
+                        <i class="fas fa-user prefix blue-text"></i>
+                        <label for="user">User</label>
+                        <input type="text" id="user" name="user" maxlength="10"
+                            data-validetta="required,number,minLength[8],maxLength[10]">
+                    </div>
+                    <div class="col s12 m6 input-field">
+                        <i class="fas fa-key prefix blue-text"></i>
+                        <label for="psw">Password</label>
+                        <input type="password" id="psw" name="psw" data-validetta="required,minLength[8]">
+                    </div>
+                    <div class="col s12 input-field">
+                        <input type="submit" class="btn blue" value="Log in" style="width: 100%;">
+                    </div>
                 </div>
-                <div class="col s12 m6 input-field">
-                    <i class="fas fa-key prefix blue-text"></i>
-                    <label for="psw">Password</label>
-                    <input type="password" id="psw" name="psw" data-validetta="required,minLength[8]">
-                </div>
-                <div class="col s12 input-field">
-                    <input type="submit" class="btn blue" value="Log in" style="width: 100%;">
-                </div>
-            </div>
             </form>
         </div>
     </main>
@@ -49,9 +65,11 @@
         <div class="footer-copyright">
             <div class="container">
                 © 2022 Copyright
-                <a class="grey-text text-lighten-4 right" href="http://www.comunidad.escom.ipn.mx/jantonio/">Github</a>
+                <a class="grey-text text-lighten-4 right"
+                    href="https://github.com/EdgarRamirezFuentes/protecting_sensitive_information">Github</a>
             </div>
         </div>
-      </footer>
+    </footer>
 </body>
+
 </html>

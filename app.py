@@ -12,8 +12,10 @@
 from flask import Flask, flash, redirect, render_template, request, session, send_from_directory, url_for
 from flask_session import Session
 from werkzeug.utils import secure_filename
-from helpers import deleteFile, decryptDocument, encryptDocument,sendDocument, signDocument
-from helpers import TMP_FOLDER, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER,dataBaseConnection,lectureOfNumArchivos,lectureOfUsuario,closeDB
+from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
+from Crypto.Hash import SHA3_256
+from helpers import deleteFile, decryptDocument, encryptDocument, getCredentials, getEncryptedDocumentsQuantity, getReceiverData, getUserList, login_required, logout_required,sendDocument, signDocument, error_message, updateEncryptedDocumentsQuantity, dataBaseConnection
+from helpers import TMP_FOLDER, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER
 from threading import Thread
 import os, re
 
@@ -24,22 +26,91 @@ app.config['SECRET_KEY'] = "123"
   #############################
  #     Index page route      #
 #############################
+
 @app.route("/")
+@login_required
 def index():
-    return render_template("./index.html")
+    connection = dataBaseConnection()
+
+    if not connection.is_connected():
+        flash('There is a problem. Try later')
+        return redirect(url_for('index'))
+
+    # Get the list of users in the DB except the one that is logged in
+    userList = getUserList(connection, session.get("idUser"))
+    connection.close()
+    return render_template("./index.html", userList = userList, idUser = session.get("idUser"))
 
 
   #############################
  #     Login page route      #
 #############################
+
 @app.route("/login", methods=["GET","POST"])
+@logout_required
 def login():
-    return render_template("login.html")
+    if request.method == "GET":
+        return render_template("login.html")
+    elif request.method == "POST":
+        username = request.form.get('user')
+        password = request.form.get("psw")
+
+        if not username:
+            flash("Username is required", "danger")
+            return redirect(url_for('index'))
+
+        if not password:
+            flash('Password required', 'danger')
+            return redirect(url_for('index'))
+
+        # Hashing password    
+        password = bytes(password, 'utf-8')
+        password = SHA3_256.new(password).hexdigest()
+
+        connection = dataBaseConnection()
+        if not connection.is_connected():
+            flash('There is a problem. Try later')
+            return redirect(url_for('index'))
+        
+
+        userData = getCredentials(connection, username)
+        
+        if not userData:
+            flash('The username is not registered', 'danger')
+            connection.close()
+            return redirect(url_for('index'))
+        
+        # Getting the user id and password
+        idUser = userData[0]
+        passwordUser = userData[1]
+
+        if passwordUser == password:
+            session["idUser"] = idUser
+            flash(f'Welcome {username}!', 'info')
+        else:
+            flash('Wrong password', 'danger')
+
+        connection.close()
+        return redirect(url_for('index'))
+
+
+  #############################
+ #     Log out page route    #
+#############################
+
+@app.route("/logout")
+@login_required
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
 
   #############################
  #     Decrypt file route    #
 #############################
+
 @app.route("/decrypt-file", methods=["POST",])
+@login_required
 def decrypt_file():
     # Get the sender ID
     senderId = request.form.get('senderId')
@@ -132,6 +203,8 @@ def decrypt_file():
   #############################
  #     Encrypt file route    #
 #############################
+
+@login_required
 @app.route("/encrypt-file", methods=["POST",])
 def encrypt_file():
     '''
@@ -143,24 +216,10 @@ def encrypt_file():
         - Receiver email
         - PDF document
     '''
-# DB Connection
-    #conexion = dataBaseConnection()
+    # Getting the id of the user that is logged in
+    senderId = session.get('idUser')
 
-
-#OBTENIENDO DATOS DE PRUEBA
-    #numeroDeArchivos = lectureOfNumArchivos(conexion)
-    #print("Numero de archivos en BD : ",numeroDeArchivos)
-
-    #nombreUsuario = lectureOfUsuario(conexion,"nombreUsuario",1)
-    #print("Nombre de usuario en BD : ",nombreUsuario)
-
-    #contrasena = lectureOfUsuario(conexion,"contrasena",1)
-    #print("Contraseña en BD : ", contrasena)
-
-#** OBTENIENDO DATOS DE PRUEBA
-    #closeDB(conexion)
     # Getting the receiver ID
-    # all = 0, specific user != 0
     receiverId = request.form.get("receiverId")
 
     if not receiverId:
@@ -170,10 +229,6 @@ def encrypt_file():
     if int(receiverId) < 0:
         flash(f'Invalid receiver ID', 'danger')
         return redirect(url_for('index'))
-
-    # Getting the sender ID
-    # Using a temporary senderId while the login module is not ready
-    senderId = "2"
 
     # Check if the post request has the file part
     if 'file' not in request.files:
@@ -212,6 +267,14 @@ def encrypt_file():
             with open(f"{PRIVATE_KEY_FOLDER}{senderId}.pem", "rb") as privateKeyFile:
                     emisorPrivateKey = privateKeyFile.read()
             
+            connection = dataBaseConnection()
+
+            if not connection.is_connected():
+                flash('There is a problem. Try later')
+                return redirect(url_for('index'))
+
+            # Getting the quantity of encrypted documents
+            encryptedDocuments = getEncryptedDocumentsQuantity(connection, senderId)[0]
             if receiverId == "0":
                 '''
                     Required data from the DB:
@@ -227,8 +290,15 @@ def encrypt_file():
                     - Receiver email
                     - Emisor encrypted documents quantity
                 '''
-                receiverEmail = "marymorrera12@gmail.com"
-                numeroCifrados = "3"
+                receiverData = getReceiverData(connection, receiverId, senderId)
+            
+                if not receiverData:
+                    flash('Not valid receiver')
+                    connection.close()
+                    return redirect(url_for('index'))
+
+                receiverEmail = receiverData[0]
+
                 with open(f"{PUBLIC_KEY_FOLDER}{receiverId}.pem", "rb") as publicKeyFile:
                     receiverPublicKey = publicKeyFile.read()
                 
@@ -236,7 +306,7 @@ def encrypt_file():
                     plaintext = PDF.read()
                 
                 # Building the encrypted filename format
-                encryptedFilename = f"{senderId}_{receiverId}_{filenameWithoutExtension}_{int(numeroCifrados) + 1}.bin"
+                encryptedFilename = f"{senderId}_{receiverId}_{filenameWithoutExtension}_{encryptedDocuments + 1}.bin"
 
                 signed = signDocument(plaintext, emisorPrivateKey, f"{SIGNATURES_FOLDER}{encryptedFilename}")
                 
@@ -247,7 +317,9 @@ def encrypt_file():
                     sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename)
                     # Check if the email was sent successfully
                     if sent:
-                        flash('Document encrypted successfully.', 'success')
+                        # Update the quantity of encrypted documents
+                        updateEncryptedDocumentsQuantity(connection, senderId, encryptedDocuments + 1)
+
                         # Open a thread to delete the uploaded file
                         uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
                         uploadedThread.daemon = True
@@ -257,7 +329,8 @@ def encrypt_file():
                         encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
                         encryptedThread.daemon = True
                         encryptedThread.start()
-                        return redirect(url_for('index'))
+
+                        flash('Document encrypted successfully.', 'success')
                     else:
                         # Open a thread to delete the signature
                         signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
@@ -275,8 +348,14 @@ def encrypt_file():
                         encryptedThread.start()
                         
                         flash("There was an error trying to send the encrypted file. Try later.", "danger")
-                        return redirect(url_for('index'))
+                    
+                    # Closing the connection to the DB
+                    connection.close()
+                    return redirect(url_for('index'))
                 else:
+                    # Closing the connection to the DB
+                    connection.close()
+
                     # Open a thread to delete the signature
                     signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
                     signatureThread.daemon = True
@@ -290,6 +369,9 @@ def encrypt_file():
                     flash("There was an error trying to encrypt the file. Try later.", "danger")
                     return redirect(url_for('index'))
         except:
+            # Closing the connection to the DB
+            connection.close()
+
             # Open a thread to delete the signature
             signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
             signatureThread.daemon = True
@@ -312,8 +394,26 @@ def encrypt_file():
   #############################
  #     Download file route   #
 #############################
+
 @app.route('/uploads/<name>')
+@login_required
 def download_file(name):
     # Send the request to download a file
     flash("Decrypted file successfully", "success")
     return send_from_directory(TMP_FOLDER, name, as_attachment=True)
+
+
+  #############################
+ #    Error Handlig module   #
+#############################
+
+def errorhandler(e):
+    """Handle error"""
+    if not isinstance(e, HTTPException):
+        e = InternalServerError()
+    return error_message(e.name, e.code)
+
+
+# Listen for errors
+for code in default_exceptions:
+    app.errorhandler(code)(errorhandler)
