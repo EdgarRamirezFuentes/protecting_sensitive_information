@@ -4,7 +4,6 @@
 
 ### In progress  
 - [ ] Encryption module - Ivette
-- [ ] Login module  - Edgar
 - [ ] Fix the typo in the login image - Mary
 
 
@@ -20,3 +19,4 @@
 - [x] Model the database - Ivette
 - [x] Use SHA-3 256 to sign the documents - Edgar
 - [x] Connect the database - Ivette
+- [x] Login module  - Edgar
