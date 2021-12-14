@@ -305,7 +305,7 @@ def dataBaseConnection()->mysql.connector:
     '''
     connection = mysql.connector.connect(
             user = "root", 
-            password = "", 
+            password = "REVOLUCIONde1910", 
             host="localhost",
             database="bdcryptography", 
             port="3306"
