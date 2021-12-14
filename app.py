@@ -115,7 +115,7 @@ def logout():
 def decrypt_file():
     # Get the sender ID
     senderId = request.form.get('senderId')
-
+    receiverId = session.get('idUser')
     # Check if the senderId was sent
     if not senderId:
         flash(f'No selected sender', 'danger')
@@ -153,17 +153,15 @@ def decrypt_file():
 
             # Store the file in the provided path
             file.save(documentPath)
+ 
 
             # Getting the sender public key
             with open(f"{PUBLIC_KEY_FOLDER}{senderId}.pem", "rb") as senderPublicKeyFile:
                 senderPublicKey = senderPublicKeyFile.read()
-            
-            # Getting the logged in user id
-            # receiver_id = session.get('id')
 
             # Getting the user private key
             # Using a temporary  private key while the login module is finished
-            with open(f"{PRIVATE_KEY_FOLDER}3.pem", "rb") as receiverPrivateKeyFile:
+            with open(f"{PRIVATE_KEY_FOLDER}{receiverId}.pem", "rb") as receiverPrivateKeyFile:
                 receiverPrivateKey = receiverPrivateKeyFile.read()
 
             # Getting the signature
@@ -276,6 +274,7 @@ def encrypt_file():
 
             # Getting the quantity of encrypted documents
             encryptedDocuments = getEncryptedDocumentsQuantity(connection, senderId)[0]
+
             if receiverId == "0":
                 '''
                     Required data from the DB:
@@ -292,7 +291,7 @@ def encrypt_file():
                     - Emisor encrypted documents quantity
                 '''
                 receiverData = getReceiverData(connection, receiverId, senderId)
-            
+
                 if not receiverData:
                     flash('Not valid receiver')
                     connection.close()
