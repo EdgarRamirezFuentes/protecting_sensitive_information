@@ -21,7 +21,7 @@ import os, re
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-app.config['SECRET_KEY'] = "123" 
+app.config['SECRET_KEY'] = os.environ.get('APP_KEY')
 
   #############################
  #     Index page route      #
