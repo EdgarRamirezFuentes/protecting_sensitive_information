@@ -27,7 +27,7 @@ from email import encoders
 from flask import redirect, session, render_template
 from functools import wraps
 # Database
-import mysql.connector
+import psycopg2
 
   #############################
  #       Folder Paths        #
@@ -294,32 +294,32 @@ def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> boo
  #      Database module      #
 #############################
 
-def dataBaseConnection()->mysql.connector:
+def dataBaseConnection():
     '''
         Get the connection to the database
 
         Return 
         ---------
-        connection : mysql.connector
+        connection
             It is the connection to the database
     '''
-    connection = mysql.connector.connect(
-            user = "root", 
-            password = "", 
-            host="localhost",
-            database="bdcryptography", 
-            port="3306"
+    connection = psycopg2.connect(
+            user = os.environ.get('dbUser'), 
+            password = os.environ.get('dbPass'), 
+            host=os.environ.get('dbHost'),
+            database=os.environ.get('dbName'), 
+            port=os.environ.get('dbPort')
             )
     return connection
 
 
-def getUserList(connection : mysql.connector, idUser : str) -> tuple:
+def getUserList(connection, idUser : str) -> tuple:
     '''
         Get the id and username of the users in the dabase except for the one that is logged in
 
         Parameters
         ---------------
-        connection : mysql.connector
+        connection
             It is the connection to the database
 
         idUser : str
@@ -336,13 +336,13 @@ def getUserList(connection : mysql.connector, idUser : str) -> tuple:
     return userList
 
 
-def getCredentials(connection : mysql.connector, username : str) -> tuple:
+def getCredentials(connection, username : str) -> tuple:
     '''
         Get the credentials of the username to login
 
         Parameters
         -----------
-        connection : mysql.connector
+        connection
             It is the connection to the database
 
         username : str
@@ -359,13 +359,13 @@ def getCredentials(connection : mysql.connector, username : str) -> tuple:
     return credentials
 
 
-def getReceiverData(connection : mysql.connector, idReceiver : str, idUser : str) -> tuple:
+def getReceiverData(connection, idReceiver : str, idUser : str) -> tuple:
     '''
         Get the necessary data to send an encrypted document
 
         Paramaters
         -------------
-        connection : mysql.connector
+        connection
             It is the connection to the database
 
         idReceiver : str 
@@ -395,13 +395,13 @@ def getReceiverData(connection : mysql.connector, idReceiver : str, idUser : str
         return receiverList
 
 
-def getEncryptedDocumentsQuantity(connection : mysql.connector, idUser : str) -> tuple:
+def getEncryptedDocumentsQuantity(connection, idUser : str) -> tuple:
     '''
         Get the number of documents that a specific user has encrypted
 
         Parameters
         -----------
-        connection : mysql.connector
+        connection
             It is the connection to the database
 
         idUser : str

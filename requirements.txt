@@ -1,5 +1,7 @@
 pycryptodome
 Flask
-mysql-connector-python
 Flask-Session
 requests
+gunicorn
+psycopg2-binary
+python-dotenv

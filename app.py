@@ -32,7 +32,7 @@ app.config['SECRET_KEY'] = "123"
 def index():
     connection = dataBaseConnection()
 
-    if not connection.is_connected():
+    if not connection:
         flash('There is a problem. Try later')
         return redirect(url_for('index'))
 
@@ -40,6 +40,7 @@ def index():
     userList = getUserList(connection, session.get("idUser"))
     connection.close()
     return render_template("./index.html", userList = userList, idUser = session.get("idUser"))
+
 
 
   #############################
@@ -68,7 +69,7 @@ def login():
         password = SHA3_256.new(password).hexdigest()
 
         connection = dataBaseConnection()
-        if not connection.is_connected():
+        if not connection:
             flash('There is a problem. Try later')
             return redirect(url_for('index'))
         
@@ -269,7 +270,7 @@ def encrypt_file():
             
             connection = dataBaseConnection()
 
-            if not connection.is_connected():
+            if not connection:
                 flash('There is a problem. Try later')
                 return redirect(url_for('index'))
 
