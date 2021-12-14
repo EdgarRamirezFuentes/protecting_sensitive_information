@@ -119,6 +119,7 @@
                   <label class="form-label" for="receiverId">To who?</label>
                   <div class="form-outline">
                     <select name="receiverId" id="receiverId" >
+                      <option value="0">All</option>
                         {% for user in userList %}
                           <option value="{{user[0]}}">{{user[1]}}</option>
                         {% endfor %}
