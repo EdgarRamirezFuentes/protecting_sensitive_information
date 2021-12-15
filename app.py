@@ -268,7 +268,7 @@ def encrypt_file():
             
             connection = dataBaseConnection()
 
-            if not connection.is_connected():
+            if not connection:
                 flash('There is a problem. Try later')
                 return redirect(url_for('index'))
 
@@ -294,6 +294,7 @@ def encrypt_file():
                     receiverEmail = user[1]
                     encryptedFilename = f"{senderId}_{receiverId}_{filenameWithoutExtension}_{encryptedDocuments}.bin"
                     encryptionProcess(connection,receiverId,senderId,encryptedDocuments,path,emisorPrivateKey,receiverEmail,encryptedFilename)
+                    
                 # Open a thread to delete the uploaded file
                 uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
                 uploadedThread.daemon = True
