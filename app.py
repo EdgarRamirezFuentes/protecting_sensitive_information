@@ -14,7 +14,7 @@ from flask_session import Session
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from Crypto.Hash import SHA3_256
-from helpers import deleteFile, decryptDocument, encryptDocument, getCredentials, getEncryptedDocumentsQuantity, getReceiverData, getUserList, login_required, logout_required,sendDocument, signDocument, error_message, updateEncryptedDocumentsQuantity, dataBaseConnection
+from helpers import deleteFile, decryptDocument, encryptDocument, getCredentials, getEncryptedDocumentsQuantity, getReceiverData, getUserList, login_required, logout_required,sendDocument, signDocument, error_message, updateEncryptedDocumentsQuantity, dataBaseConnection,encryptionProcess
 from helpers import TMP_FOLDER, SIGNATURES_FOLDER, PUBLIC_KEY_FOLDER, PRIVATE_KEY_FOLDER
 from threading import Thread
 import os, re
@@ -149,14 +149,12 @@ def decrypt_file():
             filenameWithoutExtension = filename.split('.')[0]
             
             documentPath = os.path.join(TMP_FOLDER, filename)
-
             # Store the file in the provided path
             file.save(documentPath)
 
             # Getting the sender public key
             with open(f"{PUBLIC_KEY_FOLDER}{senderId}.pem", "rb") as senderPublicKeyFile:
                 senderPublicKey = senderPublicKeyFile.read()
-            
             # Getting the logged in user id
             # receiver_id = session.get('id')
 
@@ -164,12 +162,10 @@ def decrypt_file():
             # Using a temporary  private key while the login module is finished
             with open(f"{PRIVATE_KEY_FOLDER}{receiverId}.pem", "rb") as receiverPrivateKeyFile:
                 receiverPrivateKey = receiverPrivateKeyFile.read()
-
             # Getting the signature
             # Using a temporary signature while the database is connected
             with open(f"{SIGNATURES_FOLDER}{filename}", "rb") as signatureFile:
                 signature = signatureFile.read()
-
             # Getting the reference to the file to decrypt
             encryptedDocument = open(documentPath, "rb")
             # Check if the file was decrypted successfully
@@ -274,8 +270,7 @@ def encrypt_file():
                 return redirect(url_for('index'))
 
             # Getting the quantity of encrypted documents
-            encryptedDocuments = getEncryptedDocumentsQuantity(connection, senderId)[0]
-            print("Receiver: ",receiverId)
+            encryptedDocuments = getEncryptedDocumentsQuantity(connection, senderId)[0] 
             if receiverId == "0":
                 '''
                     Required data from the DB:
@@ -284,99 +279,30 @@ def encrypt_file():
                     - Emisor encrypted documents quantity
                 '''
                 # For each receiver sign and encrypt the PDF file
-                records = getUserList(connection,senderId)
-                print("Num datos: ",len(records))
-                i=0
-#                for n in records:
-#                    aux = records[i]
-#                    receiverId = aux[0]
-#                    i = i+1
-                receiverData = getReceiverData(connection, receiverId, senderId)
+                receiverData = getReceiverData(connection, receiverId, senderId) 
                 if not receiverData:
                     flash('Not valid receiver')
                     connection.close()
                     return redirect(url_for('index'))
-                print(receiverData)
 
-                for receiver in receiverData:
-                    print(receiver)
-                    receiverId = receiver[0]
-                    receiverEmail = receiver[1]
+                for user in receiverData:
+                    receiverId = user[0]
                     encryptedDocuments += 1
-                    with open(f"{PUBLIC_KEY_FOLDER}{receiverId}.pem", "rb") as publicKeyFile:
-                        receiverPublicKey = publicKeyFile.read()
-                    
-                    with open(path, "rb") as PDF:
-                        plaintext = PDF.read()
-                    
-                    # Building the encrypted filename format
+                    receiverEmail = user[1]
                     encryptedFilename = f"{senderId}_{receiverId}_{filenameWithoutExtension}_{encryptedDocuments}.bin"
-
-                    signed = signDocument(plaintext, emisorPrivateKey, f"{SIGNATURES_FOLDER}{encryptedFilename}")
-                    
-                    encrypted = encryptDocument(plaintext, receiverPublicKey,encryptedFilename)
-                    
-                    # Check if the PDF was encrypted successfully
-                    if signed and encrypted:
-                        sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename)
-                        # Check if the email was sent successfully
-                        if sent:
-                            # Update the quantity of encrypted documents
-                            updateEncryptedDocumentsQuantity(connection, senderId, encryptedDocuments)
-
-                            # Open a thread to delete the uploaded file
-                            uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
-                            uploadedThread.daemon = True
-                            uploadedThread.start()
-
-                            # Open a thread to delete the encrypted document
-                            encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
-                            encryptedThread.daemon = True
-                            encryptedThread.start()
-
-                            flash('Document encrypted successfully.', 'success')
-                        else:
-                            # Open a thread to delete the signature
-                            signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
-                            signatureThread.daemon = True
-                            signatureThread.start()
-
-                            # Open a thread to delete the uploaded file
-                            uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
-                            uploadedThread.daemon = True
-                            uploadedThread.start()
-
-                            # Open a thread to delete the encrypted document
-                            encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
-                            encryptedThread.daemon = True
-                            encryptedThread.start()
-                            
-                            flash("There was an error trying to send the encrypted file. Try later.", "danger")
-
-                    else:
-                        # Closing the connection to the DB
-                        connection.close()
-
-                        # Open a thread to delete the signature
-                        signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
-                        signatureThread.daemon = True
-                        signatureThread.start()
-
-                        # Open a thread to delete the encrypted document
-                        encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
-                        encryptedThread.daemon = True
-                        encryptedThread.start()
-
-                        flash("There was an error trying to encrypt the file. Try later.", "danger")
-                        return redirect(url_for('index'))
+                    encryptionProcess(connection,receiverId,senderId,encryptedDocuments,path,emisorPrivateKey,receiverEmail,encryptedFilename)
+                # Open a thread to delete the uploaded file
+                uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
+                uploadedThread.daemon = True
+                uploadedThread.start()
                 return redirect(url_for("index"))
-                        #*ciphering for every record
             else:
                 '''
                     Required data from the DB:
                     - Receiver email
                     - Emisor encrypted documents quantity
                 '''
+                encryptedDocuments += 1
                 receiverData = getReceiverData(connection, receiverId, senderId)
             
                 if not receiverData:
@@ -385,72 +311,14 @@ def encrypt_file():
                     return redirect(url_for('index'))
 
                 receiverEmail = receiverData[0]
-
-                with open(f"{PUBLIC_KEY_FOLDER}{receiverId}.pem", "rb") as publicKeyFile:
-                    receiverPublicKey = publicKeyFile.read()
-                
-                with open(path, "rb") as PDF:
-                    plaintext = PDF.read()
-                
-                # Building the encrypted filename format
                 encryptedFilename = f"{senderId}_{receiverId}_{filenameWithoutExtension}_{encryptedDocuments}.bin"
-
-                signed = signDocument(plaintext, emisorPrivateKey, f"{SIGNATURES_FOLDER}{encryptedFilename}")
+                encryptionProcess(connection,receiverId,senderId,encryptedDocuments,path,emisorPrivateKey,receiverEmail,encryptedFilename)
+                # Open a thread to delete the uploaded file
+                uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
+                uploadedThread.daemon = True
+                uploadedThread.start()
+                return redirect(url_for("index"))
                 
-                encrypted = encryptDocument(plaintext, receiverPublicKey,encryptedFilename)
-                
-                # Check if the PDF was encrypted successfully
-                if signed and encrypted:
-                    sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename)
-                    # Check if the email was sent successfully
-                    if sent:
-                        # Update the quantity of encrypted documents
-                        updateEncryptedDocumentsQuantity(connection, senderId, encryptedDocuments)
-
-                        # Open a thread to delete the uploaded file
-                        uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
-                        uploadedThread.daemon = True
-                        uploadedThread.start()
-
-                        # Open a thread to delete the encrypted document
-                        encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
-                        encryptedThread.daemon = True
-                        encryptedThread.start()
-
-                        flash('Document encrypted successfully.', 'success')
-                    else:
-                        # Open a thread to delete the signature
-                        signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
-                        signatureThread.daemon = True
-                        signatureThread.start()
-
-                        # Open a thread to delete the uploaded file
-                        uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
-                        uploadedThread.daemon = True
-                        uploadedThread.start()
-
-                        # Open a thread to delete the encrypted document
-                        encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
-                        encryptedThread.daemon = True
-                        encryptedThread.start()
-                        
-                        flash("There was an error trying to send the encrypted file. Try later.", "danger")
-                else:
-                    # Closing the connection to the DB
-                    connection.close()
-
-                    # Open a thread to delete the signature
-                    signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
-                    signatureThread.daemon = True
-                    signatureThread.start()
-
-                    # Open a thread to delete the encrypted document
-                    encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
-                    encryptedThread.daemon = True
-                    encryptedThread.start()
-
-                    flash("There was an error trying to encrypt the file. Try later.", "danger")
-                return redirect(url_for('index'))
         except:
             # Closing the connection to the DB
             connection.close()

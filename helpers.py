@@ -28,7 +28,8 @@ from flask import redirect, session, render_template
 from functools import wraps
 # Database
 import mysql.connector
-
+from threading import Thread
+from flask import Flask, flash, redirect, render_template, request, session, url_for
   #############################
  #       Folder Paths        #
 #############################
@@ -289,6 +290,63 @@ def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> boo
     except: 
         return False
 
+def encryptionProcess(connection,receiverId,senderId,encryptedDocuments,path,emisorPrivateKey,receiverEmail,encryptedFilename):
+    with open(f"{PUBLIC_KEY_FOLDER}{receiverId}.pem", "rb") as publicKeyFile:
+        receiverPublicKey = publicKeyFile.read()
+    
+    with open(path, "rb") as PDF:
+        plaintext = PDF.read()
+    
+    # Building the encrypted filename format
+
+    signed = signDocument(plaintext, emisorPrivateKey, f"{SIGNATURES_FOLDER}{encryptedFilename}")
+    
+    encrypted = encryptDocument(plaintext, receiverPublicKey,encryptedFilename)
+    
+    # Check if the PDF was encrypted successfully
+    if signed and encrypted:
+        sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename)
+        # Check if the email was sent successfully
+        if sent:
+            # Update the quantity of encrypted documents
+            updateEncryptedDocumentsQuantity(connection, senderId, encryptedDocuments)
+
+            # Open a thread to delete the encrypted document
+            encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
+            encryptedThread.daemon = True
+            encryptedThread.start()
+
+            flash('Document encrypted successfully.', 'success')
+            return
+        else:
+            # Open a thread to delete the signature
+            signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
+            signatureThread.daemon = True
+            signatureThread.start()
+
+            # Open a thread to delete the encrypted document
+            encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
+            encryptedThread.daemon = True
+            encryptedThread.start()
+            
+            flash("There was an error trying to send the encrypted file. Try later.", "danger")
+            return 
+    else:
+        # Closing the connection to the DB
+        connection.close()
+
+        # Open a thread to delete the signature
+        signatureThread = Thread(target=deleteFile, args=(f"{SIGNATURES_FOLDER}{encryptedFilename}",))
+        signatureThread.daemon = True
+        signatureThread.start()
+
+        # Open a thread to delete the encrypted document
+        encryptedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{encryptedFilename}",))
+        encryptedThread.daemon = True
+        encryptedThread.start()
+
+        flash("There was an error trying to encrypt the file. Try later.", "danger")
+        return 
 
   #############################
  #      Database module      #
@@ -421,6 +479,7 @@ def getEncryptedDocumentsQuantity(connection : mysql.connector, idUser : str) ->
 def updateEncryptedDocumentsQuantity(connection, idUser, quantity):
     cursor = connection.cursor()
     cursor.execute("UPDATE usuario SET numArchivos = %s WHERE idUsuario = %s;", (quantity, idUser))
+    connection.commit()
 
 
   #############################
