@@ -333,7 +333,7 @@ def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> boo
         # Email info
         message["From"] = senderEmail
         message['To'] = receiverEmail
-        message['Subject'] = f"Archivo cifrado - {filename}"
+        message['Subject'] = f"Archivo cifrado - {filename} enviado por {session['username']}"
         attachment = open(documentPath,'rb')
         obj = MIMEBase('application','octet-stream')
         obj.set_payload((attachment).read())
@@ -415,7 +415,7 @@ def getCredentials(connection, username : str) -> tuple:
             It is a tuple that contains the id and password of the username
     '''
     cursor = connection.cursor()
-    cursor.execute("SELECT idUsuario, contrasena FROM usuario WHERE nombreUsuario = %s;", (username,))
+    cursor.execute("SELECT idUsuario, contrasena, nombreUsuario FROM usuario WHERE nombreUsuario = %s;", (username,))
     credentials = cursor.fetchone()
     return credentials
 

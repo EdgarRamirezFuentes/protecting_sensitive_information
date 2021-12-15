@@ -84,9 +84,11 @@ def login():
         # Getting the user id and password
         idUser = userData[0]
         passwordUser = userData[1]
+        usernameLogged = userData[2]
 
         if passwordUser == password:
             session["idUser"] = idUser
+            session['username'] = usernameLogged
             flash(f'Welcome {username}!', 'info')
         else:
             flash('Wrong password', 'danger')
@@ -294,7 +296,7 @@ def encrypt_file():
                     receiverEmail = user[1]
                     encryptedFilename = f"{senderId}_{receiverId}_{filenameWithoutExtension}_{encryptedDocuments}.bin"
                     encryptionProcess(connection,receiverId,senderId,encryptedDocuments,path,emisorPrivateKey,receiverEmail,encryptedFilename)
-                    
+
                 # Open a thread to delete the uploaded file
                 uploadedThread = Thread(target=deleteFile, args=(f"{TMP_FOLDER}{filename}",))
                 uploadedThread.daemon = True
