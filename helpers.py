@@ -30,6 +30,10 @@ from functools import wraps
 import mysql.connector
 from threading import Thread
 from flask import Flask, flash, redirect, render_template, request, session, url_for
+#base 64
+import base64
+import textwrap
+
   #############################
  #       Folder Paths        #
 #############################
@@ -246,7 +250,7 @@ def deleteFile(filePath):
  #       Email module        #
 #############################
 
-def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> bool: 
+def sendDocument(receiverEmail : str, documentPath : str, filename : str, signaturePath : str) -> bool: 
     '''
         Send an email that contains the encrypted document
 
@@ -275,12 +279,27 @@ def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> boo
         message['To'] = receiverEmail
         message['Subject'] = f"Archivo cifrado - {filename}"
         attachment = open(documentPath,'rb')
+        signatureBase64 = str(base64.standard_b64encode(open(signaturePath, 'rb').read()), 'utf-8')
+        signatureBase64 = ''.join([f"{block}\n" for block in textwrap.wrap(signatureBase64, 50)])
+        signatureBase64 = f'-----BEGIN SIGNATURE-----\n{signatureBase64}-----END SIGNATURE-----'
+        with open(f"{TMP_FOLDER}{filename}Signature.pem", "w") as signatureFile:
+            signatureFile.write(signatureBase64)
+        attachment2 = open(f"{TMP_FOLDER}{filename}Signature.pem", "rb")
+        # Encrypted document
         obj = MIMEBase('application','octet-stream')
         obj.set_payload((attachment).read())
         encoders.encode_base64(obj)
         obj.add_header('Content-Disposition',f"attachment; filename={filename}")
         message.attach(obj)
+
+        # Signature
+        obj2 = MIMEBase('application','octet-stream')
+        obj2.set_payload((attachment2).read())
+        encoders.encode_base64(obj2)
+        obj2.add_header('Content-Disposition',f"attachment; filename={filename.split('.')[0]}_signature.txt")
+        message.attach(obj2)
         myMessage = message.as_string()
+
         emailSession = smtplib.SMTP('smtp.gmail.com',587)
         emailSession.starttls()
         emailSession.login(senderEmail, secretkey)
@@ -305,7 +324,8 @@ def encryptionProcess(connection,receiverId,senderId,encryptedDocuments,path,emi
     
     # Check if the PDF was encrypted successfully
     if signed and encrypted:
-        sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename)
+        sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename, f"{SIGNATURES_FOLDER}{encryptedFilename}")
+
         # Check if the email was sent successfully
         if sent:
             # Update the quantity of encrypted documents
@@ -363,7 +383,7 @@ def dataBaseConnection()->mysql.connector:
     '''
     connection = mysql.connector.connect(
             user = "root", 
-            password = "REVOLUCIONde1910", 
+            password = "", 
             host="localhost",
             database="bdcryptography", 
             port="3306"
