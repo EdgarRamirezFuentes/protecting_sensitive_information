@@ -143,7 +143,7 @@ def decrypt_file():
 
             # Check if the filename fulfills the standard
             # Filename standard: senderID_receiverID_encryptedFilename_encryptionID.bin
-            filenameRegex = r"^[0-9]+_[0-9]+_[\w\-]+_[0-9]\.bin$"
+            filenameRegex = r"^[0-9]+_[0-9]+_[\w\-]+_[0-9]+\.bin$"
 
             if not re.match(filenameRegex, filename):
                 flash('The filename was modified or it is not a bin file', 'danger')
