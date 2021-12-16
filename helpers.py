@@ -30,7 +30,9 @@ from functools import wraps
 import psycopg2
 # Threads
 from threading import Thread
-
+# Signature
+import base64
+import textwrap
 
   #############################
  #       Folder Paths        #
@@ -241,7 +243,7 @@ def encryptionProcess(connection,receiverId,senderId,encryptedDocuments,path,emi
     
     # Check if the PDF was encrypted successfully
     if signed and encrypted:
-        sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename)
+        sent = sendDocument(receiverEmail ,f"{TMP_FOLDER}{encryptedFilename}", encryptedFilename, f"{SIGNATURES_FOLDER}{encryptedFilename}")
         # Check if the email was sent successfully
         if sent:
             # Update the quantity of encrypted documents
@@ -306,7 +308,7 @@ def deleteFile(filePath):
  #       Email module        #
 #############################
 
-def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> bool: 
+def sendDocument(receiverEmail : str, documentPath : str, filename : str, signaturePath : str) -> bool: 
     '''
         Send an email that contains the encrypted document
 
@@ -327,19 +329,49 @@ def sendDocument(receiverEmail : str, documentPath : str, filename : str) -> boo
     '''
     try:
         # Project email credentials
-        secretkey = "Usuario123_"
-        senderEmail = "graphycrypto8@gmail.com"
+        secretkey = os.environ.get('emailPassword')
+        senderEmail = os.environ.get('emailAccount')
         message = MIMEMultipart()
         # Email info
         message["From"] = senderEmail
         message['To'] = receiverEmail
-        message['Subject'] = f"Archivo cifrado - {filename} enviado por {session['username']}"
+        message['Subject'] = f"Encrypted file - {filename}"
+        # Attaching the message 
+        message.attach(MIMEText(f"This message contains a encrypted file and its signature sent by {session['username']}", 'plain'))
+
+        # Attaching the encrypted file 
         attachment = open(documentPath,'rb')
         obj = MIMEBase('application','octet-stream')
         obj.set_payload((attachment).read())
         encoders.encode_base64(obj)
         obj.add_header('Content-Disposition',f"attachment; filename={filename}")
         message.attach(obj)
+
+        # Reading the signature file content
+        signatureBytes = open(signaturePath,'rb').read()
+        # Converting the signature to base 64
+        signatureBase64 = str(base64.standard_b64encode(signatureBytes), 'utf-8')
+        # Converting the signature in blocks of size 50
+        signatureBase64 = textwrap.wrap(signatureBase64, 50)
+        # Adding new line at the end of each block
+        signatureBase64 = [f"{block}\n" for block in signatureBase64]
+        # Joining the blocks as a string
+        signatureBase64 = ''.join(signatureBase64)
+        # Adding format to the signature
+        signatureBase64 = f'-----BEGIN {filename} SIGNATURE-----\n{signatureBase64}-----END {filename} SIGNATURE-----'
+        # Getting the name of the encrypted file signature
+        signatureFilename = f'{filename.split(".")[0]}_signature.txt'
+        # Creating the text file that contains the signature
+        with open(f"{SIGNATURES_FOLDER}{signatureFilename}", "w") as signatureFile:
+            signatureFile.write(signatureBase64)
+        # Attaching the signature file in the email
+        attachment2 = open(f"{SIGNATURES_FOLDER}{signatureFilename}", 'rb')
+        obj2 = MIMEBase('application','octet-stream')
+        obj2.set_payload((attachment2).read())
+        encoders.encode_base64(obj2)
+        obj2.add_header('Content-Disposition',f"attachment; filename={signatureFilename}")
+        message.attach(obj2)
+
         myMessage = message.as_string()
         emailSession = smtplib.SMTP('smtp.gmail.com',587)
         emailSession.starttls()
