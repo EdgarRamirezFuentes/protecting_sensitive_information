@@ -15,8 +15,8 @@
 - [Deployment](#deployment)
 - [Usage](#usage)
 - [Built Using](#built_using)
-- [Documentation](.\README_FILES\documentation\Protecting_sentitive_information.pdf)
-- [User manual](.\README_FILES\documentation\UserManual.pdf)
+- [Documentation](./README_FILES/documentation/Protecting_sentitive_information.pdf)
+- [User manual](./README_FILES/documentation/UserManual.pdf)
 - [Authors](#authors)
 
 ## 🧐 About <a name = "about"></a>
@@ -39,46 +39,46 @@ After running the previous command all the packages needed to run the project wi
 
 ### Login
 - When you visit the web app the login UI will be shown.  
-![Login UI](.\README_FILES\img\loginUI.JPG)
+![Login UI](./README_FILES/img/loginUI.JPG)
 - Enter your credentials and click the button <i>LOG IN</i> to enter.  
-![Credentials](.\README_FILES\img\credentials.JPG)
+![Credentials](./README_FILES/img/credentials.JPG)
 - If your credentials are correct, a welcome message will be shown and you will access to the system.  
-![Welcome message](.\README_FILES\img\welcome.JPG)
+![Welcome message](./README_FILES/img/welcome.JPG)
 
 ### Main page
 - In the main page you will find the allowed actions and the user manual.
-![Main page](.\README_FILES\img\mainPage.JPG)
+![Main page](./README_FILES/img/mainPage.JPG)
 
 ### Encipher section
 - If you clicked in the <i>Cipher document section</i>, you will be sent to the encipher  section where you will be able to send enciphered <i>PDF Files</i>.   
 <b>It is important to mention that this app only allows you to encipher PDF files.</b>
-![Cipher section](.\README_FILES\img\cipherSection.JPG)
+![Cipher section](./README_FILES/img/cipherSection.JPG)
 - You need to select the PDF document to be enciphered clicking in the next button.  
-![Select document field](.\README_FILES\img\selectDocumentEncipher.JPG)
+![Select document field](./README_FILES/img/selectDocumentEncipher.JPG)
 - Select the document that will be enciphered
-![File selection](.\README_FILES\img\fileSelectionEncipher.JPG)
+![File selection](./README_FILES/img/fileSelectionEncipher.JPG)
 - The <i>Cipher document section</i> will be updated with the selected file
-![Selected file](.\README_FILES\img\selectedDocumentEncipher.JPG)
+![Selected file](./README_FILES/img/selectedDocumentEncipher.JPG)
 - Select the person that will receive the enciphered document. In this case will be sent to EdgarARF.    
 <b>Note: It could be sent to all the registered people in the app using the option <i>All</i></b>
-![Encipher section completed](.\README_FILES\img\encipherSectionComplete.JPG)
+![Encipher section completed](./README_FILES/img/encipherSectionComplete.JPG)
 - If the document was enciphered successfully, EdgarARF will receive and email that contains the enciphered document and its digital signature.  
-![Document enciphered successfully](.\README_FILES\img\encryptSuccess.JPG)
-![Enciphered document email](.\README_FILES\img\encipherEmail.JPG)
-![Enciphered document digital signature](.\README_FILES\img\digitalSignature.JPG)
+![Document enciphered successfully](./README_FILES/img/encryptSuccess.JPG)
+![Enciphered document email](./README_FILES/img/encipherEmail.JPG)
+![Enciphered document digital signature](./README_FILES/img/digitalSignature.JPG)
 
 ### Decipher section
 - First, It is needed to download the enciphered file that you received in your email.
-![Download Enciphered document](.\README_FILES\img\downloadBinaryDecipher.JPG)
+![Download Enciphered document](./README_FILES/img/downloadBinaryDecipher.JPG)
 - Once you downloaded the enciphered file, go to the <i>Decipher section</i> in the app
-![Decipher section](.\README_FILES\img\decipherSection.JPG)
+![Decipher section](./README_FILES/img/decipherSection.JPG)
 - Select the enciphered file that will be deciphered and who sent it.  
 <b>Note: The sender must be the correct and the enciphered file must not be renamed or modified in order to be deciphered successfully</b>
-![Decipher section completed](.\README_FILES\img\decipherSectionComplete.JPG)
+![Decipher section completed](./README_FILES/img/decipherSectionComplete.JPG)
 - If everything is ok, the document will be deciphered and downloaded.
-![Decipher success](.\README_FILES\img\decipherSuccess.JPG)
+![Decipher success](./README_FILES/img/decipherSuccess.JPG)
 - If you open the donwloaded file, you will be able to check the content.
-![Decipher success](.\README_FILES\img\decipheredDocument.JPG)
+![Decipher success](./README_FILES/img/decipheredDocument.JPG)
 
 ## 🚀 Deployment <a name = "deployment"></a>
 The project was deployed in Heroku using PostgreSQL as DBMS.  
