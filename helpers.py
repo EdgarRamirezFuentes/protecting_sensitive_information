@@ -373,7 +373,8 @@ def sendDocument(receiverEmail : str, documentPath : str, filename : str, signat
         message.attach(obj2)
 
         myMessage = message.as_string()
-        emailSession = smtplib.SMTP('smtp.gmail.com',587)
+        #emailSession = smtplib.SMTP('smtp.gmail.com',587)
+        emailSession = smtplib.SMTP('smtp.office365.com',590)
         emailSession.starttls()
         emailSession.login(senderEmail, secretkey)
         emailSession.sendmail(senderEmail,receiverEmail,myMessage)
